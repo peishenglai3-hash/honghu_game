@@ -42,7 +42,7 @@ async function advanceNarrative(limit = 180) {
 	throw new Error("narrative did not finish");
 }
 async function closeCurrentTask() {
-	if ((await state()).taskOpen) {
+	for (let i = 0; i < 3 && (await state()).taskOpen; i += 1) {
 		await page.keyboard.press("E");
 		await sleep(180);
 	}
@@ -90,7 +90,10 @@ await interact("TRG_DEPLOYMENT_MAP");
 await waitFor(() => !!window.ch02FlashbackGame);
 if ((await activePhaserSounds()).some((key) => key.startsWith("ch02_bgm_")))
 	throw new Error(`chapter 2 BGM leaked into flashback video: ${JSON.stringify(await activePhaserSounds())}`);
-await page.keyboard.press("E");
+if (await page.evaluate(() => window.ch02FlashbackGame.phase === "video")) {
+	await page.keyboard.press("E");
+	await sleep(120);
+}
 await page.waitForSelector(".info-screen");
 await continueInfo();
 await waitFor(() => document.querySelector('.dialogue-avatar-wrap img[src*="ch02-chen"]')?.naturalWidth > 0);
@@ -101,7 +104,7 @@ await page.keyboard.press("E");
 await sleep(180);
 await page.keyboard.press("E");
 await waitFor(() => window.ch02AncestralHallGame?.entry === "discipline" && window.ch02AncestralHallGame?.variant === "mainhall-close" && window.ch02AncestralHallGame?.mapDocument?.interactions?.some((item) => item.id === "TRG_GROUP_LEADER"));
-await interact("TRG_DEPLOYMENT_MAP");
+await interact("TRG_DAI_ANNAN");
 await advanceNarrative();
 const disciplineMarkerVisible = await page.evaluate(() => !!window.ch02AncestralHallGame.interactionMarkers.GROUP_LEADER?.visible);
 if (!disciplineMarkerVisible) throw new Error("discipline NPC interaction marker is not visible");

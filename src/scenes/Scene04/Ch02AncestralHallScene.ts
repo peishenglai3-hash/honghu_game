@@ -1167,10 +1167,25 @@ export class Ch02AncestralHallScene extends Phaser.Scene {
 			...this.mapDocument.interactions,
 			...this.mapDocument.exits.map((entry) => ({ ...entry, prompt: entry.prompt ?? entry.id })),
 		];
-		return candidates.find((target) => {
+		const containsPlayer = (target: (typeof candidates)[number]) => {
 			const [x, y, width, height] = target.rect;
 			return this.player.x >= x && this.player.x <= x + width && this.player.y >= y && this.player.y <= y + height;
-		});
+		};
+		// 正厅矮桌与戴安南的站位区域存在有意的空间重叠。剧情任务
+		// 优先命中当前阶段的专属 NPC，避免 nearby() 因对象文件顺序
+		// 返回矮桌，导致玩家站在戴安南旁边却无法触发纪律传达。
+		const priorityId = this.entry === "discipline"
+			? this.disciplinePhase === "waiting-table"
+				? "TRG_DAI_ANNAN"
+				: this.disciplinePhase === "find-leader" ? "TRG_GROUP_LEADER" : null
+			: this.entry === "materials" && this.materialsPhase === "waiting-npc"
+				? "TRG_MATERIALS_NPC"
+				: null;
+		if (priorityId) {
+			const priority = candidates.find((target) => target.id === priorityId);
+			if (priority && containsPlayer(priority)) return priority;
+		}
+		return candidates.find(containsPlayer);
 	}
 
 	updatePrompt() {

@@ -24,7 +24,6 @@ async function closeTaskAndInteract(page) {
 	await page.waitForTimeout(60);
 	await page.keyboard.press("e");
 	await waitFor(page, () => !window.prologueState.taskOpen);
-	await page.keyboard.press("e");
 }
 
 const browser = await chromium.launch();

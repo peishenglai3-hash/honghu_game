@@ -1005,6 +1005,16 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 	}
 
 	startBgm() {
+		// Phaser 的 WebAudioSound 在旧场景 shutdown 后可能仍短暂留在
+		// SoundManager 列表里，但其 currentConfig/manager 已被 destroy 清空。
+		// SC01 会从 SC03 返回并复用同一个 Scene 实例，不能再次调用这个
+		// 已销毁的音轨，否则 BaseSound.resetConfig 会对 null 写入 seek。
+		const stale = this.bgm as (Phaser.Sound.BaseSound & {
+			pendingRemove?: boolean;
+			manager?: unknown;
+			currentConfig?: unknown;
+		}) | undefined;
+		if (stale?.pendingRemove || !stale?.manager || !stale?.currentConfig) this.bgm = undefined;
 		if (!this.bgm)
 			this.bgm = addManagedBgm(this, "ch01_sc01_bgm", 0.35);
 		if (!this.bgm.isPlaying) this.bgm.play();

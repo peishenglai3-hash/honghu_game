@@ -111,8 +111,8 @@ try {
 		!result.hint.includes("Space") ||
 		result.mode !== "result" ||
 		result.risk.execution !== 0 ||
-		result.profile.C !== 2 ||
-		result.profile.P !== 1
+		result.profile.C !== 3 ||
+		result.profile.P !== 0
 	)
 		throw new Error(
 			`action result contract mismatch: ${JSON.stringify(result)}`,
