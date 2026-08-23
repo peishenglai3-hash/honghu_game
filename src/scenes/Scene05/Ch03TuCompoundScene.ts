@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { createKeyMap, isActionDown, onAction } from "@/common/actions";
-import { actorDepth } from "@/common/displayDepth";
+import { actorDepth, foregroundDepth } from "@/common/displayDepth";
 import { useGameStateStore } from "@/stores/modules/gameState";
 import { useGameSaveStore } from "@/stores/modules/gameSave";
 import { addManagedBgm } from "@/common/audioBus";
@@ -9,6 +9,10 @@ import { classifyRisk, applyFormalChoice, type RiskFailure } from "@/common/acti
 import { actorColliderBottomAt, actorColliderRectAt, ensureActorColliderConfig, createActorColliderEntry, ensureActorVisualConfig, createActorVisualEntry } from "../../actor-collider.js";
 // @ts-ignore Shared collision geometry is JavaScript and covered by runtime tests.
 import { aabbOverlapsRotatedRect } from "../../collision-geometry.js";
+// @ts-ignore Shared developer editor is JavaScript and used by existing scenes.
+import { CollisionEditor } from "../../zone-editor.js";
+// @ts-ignore Foreground occlusion renderer clips background copies above the player.
+import { ForegroundOcclusionRenderer, foregroundBottomPx } from "../../foreground-occlusion.js";
 import {
 	chenAnimKey,
 	chenDisplayWidth,
@@ -38,6 +42,8 @@ import {
 	showTask,
 	taskNeedsConfirmation,
 	togglePause,
+	getPlayerAnimationMultiplier,
+	getPlayerMovementMultiplier,
 } from "@/common/ui";
 import {
 	mountLayeredMap,
@@ -223,17 +229,58 @@ function normalizeObjectDocument(document: LayeredMapObjectDocument): RuntimeMap
 		})),
 		exits: ofType("exit").map(toRegion),
 		camera_bounds: camera?.rect as Rect | undefined,
-		foreground_occlusion: { reserved: true, objects: [] },
+		foreground_occlusion: { reserved: true, objects: ofType("foreground") },
 		actor_colliders: document.actor_colliders as Record<string, unknown> | undefined,
 		actor_visuals: document.actor_visuals as Record<string, unknown> | undefined,
 	};
 }
 
+// 区域编辑器保存时，把运行时清单合并回原始 objects 文档：被编辑器改动的
+// collision/interaction/spawn/exit/foreground 用运行时值重建，其余对象
+// （如多台 camera、state_id 等字段）原样保留，避免保存后丢失数据。
+function serializeRuntimeManifest(manifest: RuntimeMapManifest, raw: LayeredMapObjectDocument): LayeredMapObjectDocument {
+	const rawObjects = Array.isArray(raw?.objects) ? raw.objects : [];
+	const rawByKey = new Map(rawObjects.map((item) => [`${item.type}:${item.id}`, item]));
+	const mergeObject = (type: string, item: Record<string, unknown>) => ({
+		...(rawByKey.get(`${type}:${item.id}`) ?? {}),
+		...item,
+		type,
+	}) as LayeredMapObject;
+	const objects: LayeredMapObject[] = [
+		...manifest.collision.map((item) => mergeObject("collision", item)),
+		...manifest.interactions.map((item) => mergeObject("interaction", item)),
+		...manifest.spawns.map((spawn) => mergeObject("spawn", {
+			id: spawn.id,
+			facing: spawn.facing,
+			rect: [spawn.position[0] - 24, spawn.position[1] - 48, 48, 48] as Rect,
+		})),
+		...manifest.exits.map((item) => mergeObject("exit", item)),
+		...manifest.foreground_occlusion.objects.map((item) => ({
+			...(item as Record<string, unknown>),
+			type: "foreground",
+		}) as LayeredMapObject),
+		...rawObjects.filter((item) => !["collision", "interaction", "spawn", "exit", "foreground"].includes(item.type)),
+	];
+	return {
+		...(raw ?? {}),
+		map_id: manifest.map_id,
+		canvas: manifest.canvas,
+		tile_size: manifest.tile_size,
+		coordinate_origin: manifest.coordinate_origin,
+		objects,
+		...(manifest.actor_colliders ? { actor_colliders: manifest.actor_colliders } : {}),
+		...(manifest.actor_visuals ? { actor_visuals: manifest.actor_visuals } : {}),
+	};
+}
+
 export class Ch03TuCompoundScene extends Phaser.Scene {
+	zoneEditor: any;
+	foregroundRenderer: any;
 	compoundState: TuCompoundState = "STATE_WAITING";
 	definition = TU_COMPOUND_MAPS.STATE_WAITING;
 	mapDocument!: RuntimeMapManifest;
 	mapDocumentFile = "";
+	rawObjectDocument!: LayeredMapObjectDocument;
 	playerColliderProfile: any;
 	actorColliderEntries: any[] = [];
 	actorVisualProfiles: Record<string, any> = {};
@@ -388,19 +435,33 @@ export class Ch03TuCompoundScene extends Phaser.Scene {
 		this.sound.stopAll();
 		this.playChapter3Bgm();
 		const mounted = mountLayeredMap(this, this.definition);
+		this.rawObjectDocument = mounted.objectDocument;
 		this.mapDocument = normalizeObjectDocument(mounted.objectDocument);
 		this.mapDocumentFile = `public/data/${this.definition.objectPath.replace(/^data\//, "")}`;
+		// 前景遮罩：以 L06 高层遮挡层为源图，套索区域内的内容按 sort_y 判定
+		// 盖到角色上方（与第二章祠堂同模式）；其余分层固定在角色 y 排序带之下。
+		const occlusionSource = mounted.layers.L06_OCCLUSION_HIGH;
+		if (occlusionSource) {
+			this.foregroundRenderer = new ForegroundOcclusionRenderer(this, {
+				background: occlusionSource,
+				getObjects: () => this.mapDocument.foreground_occlusion.objects,
+				resolveDepth: (object: any) => foregroundDepth(foregroundBottomPx(object, 1) ?? 0),
+				tileSize: 1,
+			});
+		}
 		this.setupActorCollider();
 		this.physics.world.setBounds(0, 0, WORLD_W, WORLD_H);
 		this.buildCollision();
 		this.setupRuntimeNpcs();
+		this.setupZoneEditor();
 		if (this.compoundState === "STATE_GATE_ATTACK") this.setupGateAttackFx();
 		if (this.compoundState === "STATE_FIRE_STARTED") this.setupFireFx();
 
 		const requestedSpawn = (this as any).requestedSpawn as [number, number] | undefined;
 		const spawnId = this.compoundState === "STATE_AFTER_BATTLE" ? "SPAWN_COUNTING_CENTER" : "SPAWN_PLAYER_HIDING";
 		const spawn = this.mapDocument.spawns.find((item) => item.id === spawnId) ?? this.mapDocument.spawns[0];
-		const [spawnX, spawnY] = requestedSpawn ?? spawn?.position ?? [430, 808];
+		const fallbackSpawn: [number, number] = this.compoundState === "STATE_AFTER_BATTLE" ? [819, 548] : [454, 876];
+		const [spawnX, spawnY] = requestedSpawn ?? spawn?.position ?? fallbackSpawn;
 		this.playerDirection = spawn?.facing ?? "up";
 		this.player = this.physics.add
 			.sprite(spawnX, spawnY, chenFrameKey(this.playerDirection, 0))
@@ -409,6 +470,7 @@ export class Ch03TuCompoundScene extends Phaser.Scene {
 		this.applyPlayerColliderBody();
 		this.player.setCollideWorldBounds(true).setVisible(false);
 		this.setupPlayerVisual();
+		this.applyActorVisualHeight("PLAYER", this.actorVisualProfiles.PLAYER.display_height);
 
 		this.cameras.main
 			.setBounds(0, 0, WORLD_W, WORLD_H)
@@ -475,6 +537,13 @@ export class Ch03TuCompoundScene extends Phaser.Scene {
 				.setAlpha(alpha)
 				.setDepth(actorDepth(position[1]));
 		});
+		// 每个 NPC 都注册为角色贴图项，P 键开发模式下可识别、拖动、缩放。
+		// 必须在 npcActors 赋值完成后注册：applyActorVisualHeight/Position 会按
+		// name 在 npcActors 里查找精灵，map 执行期间该数组仍是旧的空数组，
+		// 导致 JSON 里保存的尺寸/位置永远无法应用到精灵上。
+		for (const actor of this.npcActors) {
+			this.registerRuntimeNpcVisual(actor.name, actor, actor.x, actor.y);
+		}
 		if (this.compoundState === "STATE_AFTER_BATTLE") {
 			const leader = this.npcActors.find((actor) => actor.name === "GROUP_LEADER");
 			if (leader) this.afterBattleMarker = this.createAfterBattleMarker(leader);
@@ -1723,6 +1792,102 @@ export class Ch03TuCompoundScene extends Phaser.Scene {
 		];
 	}
 
+	// NPC 视觉贴图使用绝对坐标：首次生成时把当前落脚点写入 position，
+	// 保存过 JSON 后按存档的位置/高度恢复，保证编辑器调整可持久化。
+	registerRuntimeNpcVisual(id: string, actor: Phaser.GameObjects.Image, x: number, y: number) {
+		const profile = this.actorVisualProfiles[id]
+			?? (this.actorVisualProfiles[id] = ensureActorVisualConfig(this.mapDocument as any, id, actor.displayHeight, { x, y }));
+		if (!Array.isArray(profile.position)) {
+			profile.position = [x + (profile.offset?.[0] ?? 0), y + (profile.offset?.[1] ?? 0)];
+			profile.offset = [0, 0];
+		}
+		if (!this.actorVisualEntries.some((entry) => entry.id === id)) {
+			this.actorVisualEntries.push(createActorVisualEntry({
+				id,
+				label: `NPC · ${id}`,
+				getActor: () => this.npcActors.find((candidate) => candidate.name === id),
+				getProfile: () => this.actorVisualProfiles[id],
+				getAnchor: () => ({ x, y }),
+				onPositionChange: () => this.applyActorVisualPosition(id),
+				absolutePosition: true,
+				tileSize: 1,
+			}));
+		}
+		this.applyActorVisualHeight(id, profile.display_height);
+	}
+
+	applyActorVisualHeight(id: string, height: number) {
+		if (!Number.isFinite(height) || height <= 0) return;
+		if (id === "PLAYER") {
+			if (!this.playerVisual) return;
+			const source = chenFrameSize(this, this.playerDirection);
+			this.playerVisual.setDisplaySize(Math.round((source.width / source.height) * height), height);
+			this.playerVisual.setVisible(this.actorVisualProfiles.PLAYER?.enabled !== false);
+			this.applyActorVisualPosition("PLAYER");
+			return;
+		}
+		const actor = this.npcActors.find((candidate) => candidate.name === id);
+		const source = actor?.texture?.getSourceImage?.() as HTMLImageElement | undefined;
+		if (!actor || !source?.height) return;
+		actor.setDisplaySize(Math.round((source.width / source.height) * height), height);
+		actor.setVisible(this.actorVisualProfiles[id]?.enabled !== false);
+		this.applyActorVisualPosition(id);
+	}
+
+	applyActorVisualPosition(id?: string) {
+		if (id === "PLAYER" || !id) {
+			if (!this.playerVisual || !this.player) return;
+			const offset = this.actorVisualProfiles.PLAYER?.offset ?? [0, 0];
+			this.playerVisual.setPosition(this.player.x + offset[0], this.player.y + offset[1]);
+			return;
+		}
+		const actor = this.npcActors.find((candidate) => candidate.name === id);
+		const profile = this.actorVisualProfiles[id];
+		if (!actor || !profile) return;
+		const position = profile.position;
+		const offset = profile.offset ?? [0, 0];
+		actor.setPosition(position?.[0] ?? actor.x + offset[0], position?.[1] ?? actor.y + offset[1]);
+		// 贴图位置绑定后同步层级：层级按落脚点 Y 计算，若不刷新会停留在
+		// 硬编码初始位置的 depth，导致移动后的 NPC 遮挡关系错乱。
+		actor.setDepth(actorDepth(actor.y));
+	}
+
+	setupZoneEditor() {
+		if (!import.meta.env.DEV) return;
+		const documents = { [this.mapDocumentFile]: serializeRuntimeManifest(this.mapDocument, this.rawObjectDocument) };
+		this.zoneEditor = new CollisionEditor(this, {
+			documents,
+			tileSize: 1,
+			snapStep: 1,
+			getCollisions: () => this.mapDocument.collision,
+			getInteractions: () => this.mapDocument.interactions,
+			getForegrounds: () => this.mapDocument.foreground_occlusion.objects,
+			getDefaultForegroundDepth: () => 1600,
+			getWorldSize: () => [WORLD_W, WORLD_H],
+			getActorColliders: () => this.actorColliderEntries,
+			getActorVisuals: () => this.actorVisualEntries,
+			onActorVisualChange: (id: string, height: number) => this.applyActorVisualHeight(id, height),
+			getMagneticSource: () => this.textures.get(this.definition.layerKeys.L04_PROP_INTERACT).getSourceImage(),
+			replaceDocuments: (next: any) => {
+				this.rawObjectDocument = next[this.mapDocumentFile];
+				this.mapDocument = normalizeObjectDocument(this.rawObjectDocument);
+				documents[this.mapDocumentFile] = serializeRuntimeManifest(this.mapDocument, this.rawObjectDocument);
+				this.setupActorCollider();
+				this.buildCollision();
+				this.applyPlayerColliderBody();
+				for (const actor of this.npcActors) this.registerRuntimeNpcVisual(actor.name, actor, actor.x, actor.y);
+			},
+			onChange: (kind: string) => {
+				documents[this.mapDocumentFile] = serializeRuntimeManifest(this.mapDocument, this.rawObjectDocument);
+				if (!kind || kind === "collision") {
+					this.buildCollision();
+					this.applyPlayerColliderBody();
+				}
+				if (!kind || kind === "foreground") this.foregroundRenderer?.rebuild();
+			},
+		});
+	}
+
 	setupPlayerVisual() {
 		createChenWalkAnimations(this);
 		this.playerVisual = this.add
@@ -1738,12 +1903,6 @@ export class Ch03TuCompoundScene extends Phaser.Scene {
 		this.player
 			.setSize(this.playerColliderProfile.size[0], this.playerColliderProfile.size[1])
 			.setOffset(source.width / 2 + this.playerColliderProfile.offset[0], source.height + this.playerColliderProfile.offset[1]);
-	}
-
-	applyActorVisualPosition() {
-		if (!this.playerVisual || !this.player) return;
-		const offset = this.actorVisualProfiles.PLAYER?.offset ?? [0, 0];
-		this.playerVisual.setPosition(this.player.x + offset[0], this.player.y + offset[1]);
 	}
 
 	depthForPlayer() {
@@ -1907,7 +2066,7 @@ export class Ch03TuCompoundScene extends Phaser.Scene {
 
 	syncPlayerVisual(direction: ChenWalkDirection, moving: boolean) {
 		if (!this.playerVisual) return;
-		this.playerVisual.anims.timeScale = 1;
+		this.playerVisual.anims.timeScale = getPlayerAnimationMultiplier();
 		this.applyActorVisualPosition();
 		const displayHeight = this.actorVisualProfiles.PLAYER.display_height;
 		this.playerVisual.setDisplaySize(chenDisplayWidth(this, direction, displayHeight), displayHeight);
@@ -1934,7 +2093,7 @@ export class Ch03TuCompoundScene extends Phaser.Scene {
 			this.syncPlayerVisual(this.playerDirection, false);
 			return;
 		}
-		const speed = 220;
+		const speed = 220 * getPlayerMovementMultiplier();
 		let x = 0;
 		let y = 0;
 		if (isActionDown(this.keyMap, "MOVE_LEFT")) x -= 1;

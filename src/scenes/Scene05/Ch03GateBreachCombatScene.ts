@@ -4,6 +4,12 @@ import { actorDepth } from "@/common/displayDepth";
 import { useGameSaveStore } from "@/stores/modules/gameSave";
 import { addManagedBgm } from "@/common/audioBus";
 import { useGameStateStore } from "@/stores/modules/gameState";
+// @ts-ignore Shared JS helpers are intentionally untyped in the current project.
+import { actorColliderRectAt, ensureActorColliderConfig, createActorColliderEntry, ensureActorVisualConfig, createActorVisualEntry } from "../../actor-collider.js";
+// @ts-ignore Shared collision geometry is JavaScript and covered by runtime tests.
+import { aabbOverlapsRotatedRect } from "../../collision-geometry.js";
+// @ts-ignore Shared developer editor is JavaScript and used by existing scenes.
+import { CollisionEditor } from "../../zone-editor.js";
 import {
 	clearFade,
 	closeTask,
@@ -37,6 +43,7 @@ import {
 	mountLayeredMap,
 	preloadLayeredMap,
 	type LayeredMapObject,
+	type LayeredMapObjectDocument,
 } from "@/common/layeredMap";
 import { getChapter3TaskAssignment, type Chapter3TaskPermission } from "./ch03RiskPrecheck";
 import { TU_COMPOUND_MAPS } from "./tuCompoundMap";
@@ -75,6 +82,37 @@ interface EnemyUnit {
 	lastShotAt: number;
 	staggerUntil: number;
 	patrolTarget: Phaser.Math.Vector2;
+}
+
+// 区域编辑器保存时重建 collision 对象（含编辑器改动），其余对象与顶层字段原样保留。
+function serializeCombatDocument(
+	raw: LayeredMapObjectDocument,
+	collisions: Array<{ id: string; rect: Rect; rotation: number }>,
+	actorVisuals: Record<string, any>,
+	actorColliders?: Record<string, unknown>,
+): LayeredMapObjectDocument {
+	const rawObjects = Array.isArray(raw?.objects) ? raw.objects : [];
+	const rawByKey = new Map(rawObjects.map((item) => [`${item.type}:${item.id}`, item]));
+	const objects = [
+		...collisions.map((item) => ({
+			...(rawByKey.get(`collision:${item.id}`) ?? {}),
+			...item,
+			type: "collision",
+		})),
+		...rawObjects.filter((item) => item.type !== "collision"),
+	];
+	const serialized: LayeredMapObjectDocument = {
+		...(raw ?? {}),
+		map_id: raw.map_id,
+		canvas: raw.canvas,
+		tile_size: raw.tile_size,
+		coordinate_origin: raw.coordinate_origin,
+		objects,
+	};
+	if (Object.keys(actorVisuals).length) (serialized as Record<string, unknown>).actor_visuals = actorVisuals;
+	if (actorColliders && Object.keys(actorColliders).length)
+		(serialized as Record<string, unknown>).actor_colliders = actorColliders;
+	return serialized;
 }
 
 interface ProjectileUnit {
@@ -139,9 +177,16 @@ function distanceBetween(
 }
 
 export class Ch03GateBreachCombatScene extends Phaser.Scene {
+	zoneEditor: any;
 	compoundDefinition = TU_COMPOUND_MAPS.STATE_GATE_BROKEN;
+	combatObjectDocument!: LayeredMapObjectDocument;
 	mapDocument!: { objects: CombatMapObject[] };
+	editorCollisions: Array<{ id: string; rect: Rect; rotation: number }> = [];
 	collisionRects: Array<{ id: string; rect: Rect; rotation: number }> = [];
+	playerColliderProfile: any;
+	actorColliderEntries: any[] = [];
+	actorVisualProfiles: Record<string, any> = {};
+	actorVisualEntries: any[] = [];
 	player!: Phaser.GameObjects.Sprite;
 	playerDirection: ChenWalkDirection = "right";
 	playerWeapon!: Phaser.GameObjects.Image;
@@ -228,12 +273,14 @@ export class Ch03GateBreachCombatScene extends Phaser.Scene {
 		this.sound.stopAll();
 		this.playBgm();
 		const mounted = mountLayeredMap(this, this.compoundDefinition);
+		this.combatObjectDocument = mounted.objectDocument;
 		this.mapDocument = {
 			objects: (mounted.objectDocument.objects ?? []) as CombatMapObject[],
 		};
 		this.buildCollision();
 		this.setupRuntimeFx();
 		this.setupActors();
+		this.setupZoneEditor();
 		this.cameras.main
 			.setBounds(0, 0, WORLD_W, WORLD_H)
 			.setZoom(CAMERA_ZOOM)
@@ -274,20 +321,26 @@ export class Ch03GateBreachCombatScene extends Phaser.Scene {
 		hideCombatHud();
 	}
 
-	buildCollision() {
+	buildCollision(reloadEditorCollisions = true) {
 		const excluded = new Set([
 			"COL_GATE_LEAF_LEFT",
 			"COL_GATE_LEAF_RIGHT",
 			"COL_RAM_POLE_REST",
 			"HAZARD_OIL_PRESS_FIRE",
 		]);
-		this.collisionRects = this.mapDocument.objects
-			.filter((item) => item.type === "collision" && item.rect && !excluded.has(item.id))
-			.map((item) => ({
-				id: item.id,
-				rect: item.rect as Rect,
-				rotation: Number(item.rotation ?? 0),
-			}));
+		// 编辑器直接修改 editorCollisions。只有载入/重载文档时才重新生成该数组，
+		// 否则每次拖动都会替换对象引用，导致当前选中碰撞箱的后续操作丢失。
+		if (reloadEditorCollisions) {
+			this.editorCollisions = this.mapDocument.objects
+				.filter((item) => item.type === "collision" && item.rect)
+				.map((item) => ({
+					...item,
+					id: String(item.id),
+					rect: item.rect as Rect,
+					rotation: Number(item.rotation ?? 0),
+				}));
+		}
+		this.collisionRects = this.editorCollisions.filter((item) => !excluded.has(item.id));
 	}
 
 	setupRuntimeFx() {
@@ -347,6 +400,7 @@ export class Ch03GateBreachCombatScene extends Phaser.Scene {
 		this.playerWeapon = this.add
 			.image(this.player.x + 28, this.player.y - 64, WEAPONS[this.weapon].texture)
 			.setOrigin(0.12, 0.5)
+			.setFlipX(true)
 			.setDisplaySize(58, 30)
 			.setDepth(actorDepth(start[1]) + 1);
 
@@ -387,6 +441,7 @@ export class Ch03GateBreachCombatScene extends Phaser.Scene {
 			const weaponSprite = this.add
 				.image(x + 18, y - 62, WEAPONS.pistol.texture)
 				.setOrigin(0.12, 0.5)
+				.setFlipX(true)
 				.setDisplaySize(52, 22)
 				.setDepth(actorDepth(y) + 1);
 			const marker = this.add.graphics().setDepth(actorDepth(y) + 2);
@@ -407,6 +462,122 @@ export class Ch03GateBreachCombatScene extends Phaser.Scene {
 			return enemy;
 		});
 		this.reticle = this.add.graphics().setDepth(700);
+		this.setupActorCollider();
+		// 全部人物贴图注册进 P 键开发编辑器：玩家、董云庭与四名团丁。
+		this.registerCombatActorVisual("PLAYER", "陈继南（玩家）", this.player, PLAYER_HEIGHT, this.player.x, this.player.y);
+		this.registerCombatActorVisual("DONG_YUNTING", "董云庭", this.dongYunting, 112, this.dongYunting.x, this.dongYunting.y);
+		for (const enemy of this.enemies) {
+			this.registerCombatActorVisual(enemy.id, `团丁 · ${enemy.id}`, enemy.sprite, 114, enemy.sprite.x, enemy.sprite.y);
+		}
+	}
+
+	setupActorCollider() {
+		this.playerColliderProfile = ensureActorColliderConfig(this.combatObjectDocument as any, "PLAYER", {
+			offset: [-18, -28],
+			size: [36, 28],
+		});
+		this.actorColliderEntries = [
+			createActorColliderEntry({
+				id: "ACTOR_PLAYER",
+				label: "玩家",
+				getActor: () => this.player,
+				getProfile: () => this.playerColliderProfile,
+				tileSize: 1,
+			}),
+		];
+	}
+
+	registerCombatActorVisual(id: string, label: string, actor: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite, fallbackHeight: number, x: number, y: number) {
+		const profile = this.actorVisualProfiles[id]
+			?? (this.actorVisualProfiles[id] = ensureActorVisualConfig(this.combatObjectDocument as any, id, fallbackHeight, { x, y }));
+		if (!Array.isArray(profile.position)) {
+			profile.position = [x + (profile.offset?.[0] ?? 0), y + (profile.offset?.[1] ?? 0)];
+			profile.offset = [0, 0];
+		}
+		if (!this.actorVisualEntries.some((entry) => entry.id === id)) {
+			this.actorVisualEntries.push(createActorVisualEntry({
+				id,
+				label,
+				getActor: () => actor,
+				getProfile: () => this.actorVisualProfiles[id],
+				getAnchor: () => ({ x, y }),
+				onPositionChange: () => this.applyCombatActorVisualPosition(id),
+				absolutePosition: true,
+				tileSize: 1,
+			}));
+		}
+		this.applyCombatActorVisualHeight(id, profile.display_height);
+	}
+
+	applyCombatActorVisualHeight(id: string, height: number) {
+		if (!Number.isFinite(height) || height <= 0) return;
+		if (id === "PLAYER") {
+			if (!this.player) return;
+			this.player.setDisplaySize(chenDisplayWidth(this, this.playerDirection, height), height);
+			this.player.setVisible(this.actorVisualProfiles.PLAYER?.enabled !== false);
+			this.applyCombatActorVisualPosition("PLAYER");
+			return;
+		}
+		const actor = id === "DONG_YUNTING" ? this.dongYunting : this.enemies.find((enemy) => enemy.id === id)?.sprite;
+		const source = actor?.texture?.getSourceImage?.() as HTMLImageElement | undefined;
+		if (!actor || !source?.height) return;
+		actor.setDisplaySize(Math.round((source.width / source.height) * height), height);
+		actor.setVisible(this.actorVisualProfiles[id]?.enabled !== false);
+		this.applyCombatActorVisualPosition(id);
+	}
+
+	applyCombatActorVisualPosition(id: string) {
+		const actor = id === "PLAYER" ? this.player
+			: id === "DONG_YUNTING" ? this.dongYunting
+			: this.enemies.find((enemy) => enemy.id === id)?.sprite;
+		const profile = this.actorVisualProfiles[id];
+		if (!actor || !profile) return;
+		const position = profile.position;
+		const offset = profile.offset ?? [0, 0];
+		actor.setPosition(position?.[0] ?? actor.x + offset[0], position?.[1] ?? actor.y + offset[1]);
+	}
+
+	setupZoneEditor() {
+		if (!import.meta.env.DEV) return;
+		const documents = { [this.mapDocumentFile()]: serializeCombatDocument(this.combatObjectDocument, this.editorCollisions, this.actorVisualProfiles, (this.combatObjectDocument as any).actor_colliders) };
+		this.zoneEditor = new CollisionEditor(this, {
+			documents,
+			tileSize: 1,
+			snapStep: 1,
+			getCollisions: () => this.editorCollisions,
+			getInteractions: () => [],
+			getForegrounds: () => [],
+			getWorldSize: () => [WORLD_W, WORLD_H],
+			getActorColliders: () => this.actorColliderEntries,
+			getActorVisuals: () => this.actorVisualEntries,
+			onActorVisualChange: (id: string, height: number) => this.applyCombatActorVisualHeight(id, height),
+			replaceDocuments: (next: any) => {
+				this.combatObjectDocument = next[this.mapDocumentFile()];
+				this.mapDocument = { objects: (this.combatObjectDocument.objects ?? []) as CombatMapObject[] };
+				this.buildCollision(true);
+				this.actorVisualProfiles = {};
+				this.actorVisualEntries = [];
+				this.setupActorCollider();
+				this.registerCombatActorVisual("PLAYER", "陈继南（玩家）", this.player, PLAYER_HEIGHT, this.player.x, this.player.y);
+				this.registerCombatActorVisual("DONG_YUNTING", "董云庭", this.dongYunting, 112, this.dongYunting.x, this.dongYunting.y);
+				for (const enemy of this.enemies) {
+					this.registerCombatActorVisual(enemy.id, `团丁 · ${enemy.id}`, enemy.sprite, 114, enemy.sprite.x, enemy.sprite.y);
+				}
+			},
+			onChange: (kind: string) => {
+				const next = serializeCombatDocument(this.combatObjectDocument, this.editorCollisions, this.actorVisualProfiles, (this.combatObjectDocument as any).actor_colliders);
+				documents[this.mapDocumentFile()] = next;
+				// 保留编辑器正在操作的 editorCollisions 引用，同时让运行时和后续保存
+				// 使用最新的非碰撞对象/顶层字段。
+				this.combatObjectDocument = next;
+				this.mapDocument = { objects: (next.objects ?? []) as CombatMapObject[] };
+				if (!kind || kind === "collision") this.buildCollision(false);
+			},
+		});
+	}
+
+	mapDocumentFile(): string {
+		return `public/data/${this.compoundDefinition.objectPath.replace(/^data\//, "")}`;
 	}
 
 	drawEnemyMarker(enemy: EnemyUnit) {
@@ -469,6 +640,7 @@ export class Ch03GateBreachCombatScene extends Phaser.Scene {
 		this.playerWeapon.setPosition(this.playerCenter.x + aim.x * 28, this.playerCenter.y + aim.y * 28);
 		this.playerWeapon.setRotation(angle);
 		this.playerWeapon.setTexture(WEAPONS[this.weapon].texture);
+		this.playerWeapon.setFlipX(this.weapon === "pistol");
 		this.playerWeapon.setDisplaySize(this.weapon === "longgun" ? 78 : 56, this.weapon === "longgun" ? 22 : 28);
 		this.playerWeapon.setDepth(actorDepth(this.player.y) + 1);
 		const nextDirection: ChenWalkDirection = Math.abs(aim.x) >= Math.abs(aim.y)
@@ -508,6 +680,7 @@ export class Ch03GateBreachCombatScene extends Phaser.Scene {
 			.setVisible(enemy.state === "active")
 			.setPosition(enemy.sprite.x + direction.x * 18, enemy.sprite.y - 62 + direction.y * 18)
 			.setRotation(angle)
+			.setFlipX(true)
 			.setDepth(actorDepth(enemy.sprite.y) + 1);
 	}
 
@@ -520,30 +693,36 @@ export class Ch03GateBreachCombatScene extends Phaser.Scene {
 		if (isActionDown(this.keyMap, "MOVE_DOWN")) y += 1;
 		if (!x && !y) {
 			this.player.anims.stop();
-			this.player.setTexture(chenFrameKey(this.playerDirection, 0));
+			const idleKey = chenFrameKey(this.playerDirection, 0);
+			if (this.player.texture.key !== idleKey) this.player.setTexture(idleKey);
 			return;
 		}
 		const vector = new Phaser.Math.Vector2(x, y).normalize().scale(245 * delta);
 		this.tryMove(vector.x, vector.y);
-		if (Math.abs(x) >= Math.abs(y)) this.playerDirection = x < 0 ? "left" : "right";
-		else this.playerDirection = y < 0 ? "up" : "down";
-		this.player.setTexture(chenFrameKey(this.playerDirection, 0));
-		if (this.player.anims.currentAnim?.key !== chenAnimKey(this.playerDirection)) this.player.play(chenAnimKey(this.playerDirection));
+		const nextDirection: ChenWalkDirection = Math.abs(x) >= Math.abs(y)
+			? x < 0 ? "left" : "right"
+			: y < 0 ? "up" : "down";
+		this.playerDirection = nextDirection;
+		const animation = chenAnimKey(nextDirection);
+		if (this.player.anims.currentAnim?.key !== animation || !this.player.anims.isPlaying) {
+			this.player.setTexture(chenFrameKey(nextDirection, 0));
+			this.player.play(animation);
+		}
 		this.player.anims.timeScale = 1.2;
 	}
 
 	tryMove(dx: number, dy: number) {
 		const canOccupy = (x: number, y: number) => {
-			const rect: Rect = [x - 18, y - 28, 36, 28];
+			const rect: Rect = actorColliderRectAt(x, y, this.playerColliderProfile, 1);
 			if (rect[0] < 0 || rect[1] < 0 || rect[0] + rect[2] > WORLD_W || rect[1] + rect[3] > WORLD_H) return false;
-			return !this.collisionRects.some(({ rect: obstacle }) => this.aabbOverlaps(rect, obstacle));
+			return !this.collisionRects.some(({ rect: obstacle, rotation }) => this.aabbOverlaps(rect, obstacle, rotation));
 		};
 		if (canOccupy(this.player.x + dx, this.player.y)) this.player.x += dx;
 		if (canOccupy(this.player.x, this.player.y + dy)) this.player.y += dy;
 	}
 
-	aabbOverlaps(a: Rect, b: Rect): boolean {
-		return a[0] < b[0] + b[2] && a[0] + a[2] > b[0] && a[1] < b[1] + b[3] && a[1] + a[3] > b[1];
+	aabbOverlaps(a: Rect, b: Rect, rotation = 0): boolean {
+		return aabbOverlapsRotatedRect(a, b, rotation);
 	}
 
 	shoot() {
@@ -746,7 +925,7 @@ export class Ch03GateBreachCombatScene extends Phaser.Scene {
 			projectile.sprite.y += projectile.velocity.y * delta;
 			projectile.life -= delta;
 			const outOfBounds = projectile.sprite.x < 0 || projectile.sprite.y < 0 || projectile.sprite.x > WORLD_W || projectile.sprite.y > WORLD_H;
-			const hitWall = this.collisionRects.some(({ rect }) => this.aabbOverlaps([projectile.sprite.x - 2, projectile.sprite.y - 2, 4, 4], rect));
+			const hitWall = this.collisionRects.some(({ rect, rotation }) => this.aabbOverlaps([projectile.sprite.x - 2, projectile.sprite.y - 2, 4, 4], rect, rotation));
 			let remove = projectile.life <= 0 || outOfBounds || hitWall;
 		if (!remove && projectile.faction === "player") {
 			const target = this.enemies.find((enemy) => enemy.state === "active" && Phaser.Math.Distance.Between(projectile.sprite.x, projectile.sprite.y, enemy.sprite.x, enemy.sprite.y - 52) < 32);
@@ -853,7 +1032,7 @@ export class Ch03GateBreachCombatScene extends Phaser.Scene {
 
 	enemyCanOccupy(x: number, y: number) {
 		const rect: Rect = [x - 20, y - 24, 40, 24];
-		return rect[0] >= 0 && rect[1] >= 0 && rect[0] + rect[2] <= WORLD_W && rect[1] + rect[3] <= WORLD_H && !this.collisionRects.some(({ rect: obstacle }) => this.aabbOverlaps(rect, obstacle));
+		return rect[0] >= 0 && rect[1] >= 0 && rect[0] + rect[2] <= WORLD_W && rect[1] + rect[3] <= WORLD_H && !this.collisionRects.some(({ rect: obstacle, rotation }) => this.aabbOverlaps(rect, obstacle, rotation));
 	}
 
 	enemyShoot(enemy: EnemyUnit) {

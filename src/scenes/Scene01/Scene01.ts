@@ -102,8 +102,10 @@ export class Scene01 extends Phaser.Scene {
 		height: number;
 	}[];
 	studentA!: Phaser.GameObjects.Sprite;
-	studentB!: Phaser.GameObjects.Sprite | Phaser.GameObjects.DOMElement;
+	studentB!: Phaser.GameObjects.Image;
 	studentBExit: Phaser.GameObjects.Sprite | null = null;
+	studentBGifSource: HTMLImageElement | null = null;
+	studentBGifTexture: Phaser.Textures.CanvasTexture | null = null;
 	npcMarkers: Partial<Record<"A" | "B", Phaser.GameObjects.Container>> = {};
 	leaveNpcArrived: { A: boolean; B: boolean } | null = null;
 	monumentChoiceTimer: number | null = null;
@@ -129,6 +131,10 @@ export class Scene01 extends Phaser.Scene {
 			"student-b-front-task3",
 			"assets/characters/student-b/front-task3.png",
 		);
+		this.load.image(
+			"student-b-camera-source",
+			"assets/characters/student-b/actions/camera-keyed.gif",
+		);
 		this.load.spritesheet(
 			"student-a-reading",
 			"assets/characters/student-a/actions/reading-sheet.png",
@@ -146,6 +152,7 @@ export class Scene01 extends Phaser.Scene {
 		this.createKeyedTexture("student-b-front", "student-b-front-keyed");
 		this.createKeyedTexture("student-b-back", "student-b-back-keyed");
 		this.createKeyedTexture("student-b-side", "student-b-side-keyed");
+		this.createStudentBGifTexture();
 		this.anims.create({
 			key: "student-a-reading-anim",
 			frames: this.anims.generateFrameNumbers("student-a-reading", {
@@ -418,9 +425,7 @@ export class Scene01 extends Phaser.Scene {
 		if (id === "PLAYER" && this.playerVisual) setModernPlayerDirection(this.playerVisual, this.playerDirection as any, height);
 		else if (id === "NPC_CH00_STUDENT_A" && this.studentA) this.studentA.setDisplaySize(Math.round(height * STUDENT_A_FRAME.width / STUDENT_A_FRAME.height), height);
 		else if (id === "NPC_CH00_STUDENT_B" && this.studentB) {
-			const node = (this.studentB as Phaser.GameObjects.DOMElement).node as HTMLElement;
-			node.style.width = `${Math.round(height * 84 / 188)}px`;
-			node.style.height = `${height}px`;
+			this.studentB.setDisplaySize(Math.round(height * 84 / 188), height);
 			if (this.studentBExit) {
 				const source = this.textures.get(this.studentBExit.texture.key).getSourceImage() as HTMLImageElement;
 				this.studentBExit.setDisplaySize(Math.round(height * source.width / source.height), height);
@@ -470,14 +475,9 @@ export class Scene01 extends Phaser.Scene {
 			facing === "down" ? "front" : facing === "up" ? "back" : "side";
 		const depth = this.depthForActorAt(x * PX, y * PX, this.actorColliderProfiles[id]);
 		if (id === "NPC_CH00_STUDENT_B") {
-			const image = document.createElement("img");
-			image.src = assetPath(
-				"/assets/characters/student-b/actions/camera-keyed.gif",
-			);
-			image.className = "scene01-npc-gif-mask";
-			image.alt = "同学乙拍照";
 			const npc = this.add
-				.dom(x * PX, y * PX, image)
+				.image(x * PX, y * PX, "student-b-camera")
+				.setDisplaySize(Math.round(this.actorVisualProfiles.NPC_CH00_STUDENT_B.display_height * 84 / 188), this.actorVisualProfiles.NPC_CH00_STUDENT_B.display_height)
 				.setOrigin(0.5, 1)
 				.setDepth(depth);
 			npc.setData("spawnId", id);
@@ -511,6 +511,32 @@ export class Scene01 extends Phaser.Scene {
 		npc.setData("action", "idle");
 		(this as any)[prefix === "student-a" ? "studentA" : "studentB"] = npc;
 		this.setActorVisualBasePosition(id, x * PX, y * PX);
+	}
+
+	createStudentBGifTexture() {
+		const source = this.textures.get("student-b-camera-source").getSourceImage() as HTMLImageElement;
+		const sourceWidth = source.naturalWidth || source.width;
+		const sourceHeight = source.naturalHeight || source.height;
+		const cropWidth = Math.max(1, Math.round(sourceHeight * 84 / 188));
+		const texture = this.textures.createCanvas("student-b-camera", cropWidth, sourceHeight);
+		if (!texture || !sourceWidth || !sourceHeight) return;
+		this.studentBGifSource = source;
+		this.studentBGifTexture = texture;
+		this.refreshStudentBGifTexture();
+	}
+
+	refreshStudentBGifTexture() {
+		const source = this.studentBGifSource;
+		const texture = this.studentBGifTexture;
+		if (!source || !texture) return;
+		const sourceWidth = source.naturalWidth || source.width;
+		const sourceHeight = source.naturalHeight || source.height;
+		if (!sourceWidth || !sourceHeight) return;
+		const cropWidth = texture.width;
+		const cropX = Math.max(0, Math.floor((sourceWidth - cropWidth) / 2));
+		texture.context.clearRect(0, 0, texture.width, texture.height);
+		texture.context.drawImage(source, cropX, 0, cropWidth, sourceHeight, 0, 0, texture.width, texture.height);
+		texture.update();
 	}
 
 	createNpcMarker(
@@ -601,6 +627,7 @@ export class Scene01 extends Phaser.Scene {
 	update() {
 		if (this.physics.world.debugGraphic)
 			this.physics.world.debugGraphic.setVisible(false);
+		this.refreshStudentBGifTexture();
 		this.syncActorDepths();
 		const canWalk = this.state.mode === "explore" || this.state.mode === "leave_walk";
 		if (!this.player || this.state.playerLocked || this.state.paused || !canWalk) {

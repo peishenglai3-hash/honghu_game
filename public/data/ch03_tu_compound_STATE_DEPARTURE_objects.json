@@ -169,7 +169,7 @@
       "type": "spawn",
       "rect": [
         430,
-        760,
+        828,
         48,
         48
       ],
@@ -287,7 +287,7 @@
       "type": "spawn",
       "rect": [
         795,
-        475,
+        500,
         48,
         48
       ],
@@ -304,5 +304,25 @@
       ],
       "action": "assemble_and_depart"
     }
-  ]
+  ],
+  "actor_colliders": {
+    "PLAYER": {
+      "offset": [-28, -36],
+      "size": [56, 36]
+    }
+  },
+  "actor_visuals": {
+    "PLAYER": { "display_height": 280, "offset": [0, 0], "position": [454, 808] },
+    "GATE_GUARD_A": { "display_height": 220, "offset": [0, 0], "position": [610, 645] },
+    "GATE_GUARD_B": { "display_height": 220, "offset": [0, 0], "position": [1050, 645] },
+    "GROUP_LEADER": { "display_height": 250, "offset": [0, 0], "position": [560, 875] },
+    "ELDER_ESCORT": { "display_height": 245, "offset": [0, 0], "position": [475, 875] },
+    "FRONT_MEMBER_A": { "display_height": 245, "offset": [0, 0], "position": [705, 875] },
+    "FRONT_MEMBER_B": { "display_height": 245, "offset": [0, 0], "position": [965, 875] },
+    "REAR_MEMBER": { "display_height": 245, "offset": [0, 0], "position": [380, 875] }
+  },
+  "player_motion": {
+    "movement_multiplier": 1.2,
+    "animation_multiplier": 1
+  }
 }
