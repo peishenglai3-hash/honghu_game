@@ -63,12 +63,12 @@ export function buildChapter3ActionChoices(
 		{
 			id: "CH03_ACTION_OBSERVE_A",
 			label: CHOICE_LABELS.A,
-			detail: "审慎判断 +2；原则坚持 +1；执行风险 -1",
+			detail: "审慎判断 +3；执行风险 -1",
 		},
 		{
 			id: "CH03_ACTION_OBSERVE_B",
 			label: CHOICE_LABELS.B,
-			detail: "组织协同 +3；情境调适 +1；协同风险 -1",
+			detail: "组织协同 +3；协同风险 -1",
 		},
 		{
 			id: "CH03_ACTION_OBSERVE_C",
@@ -118,8 +118,8 @@ export function buildChapter3ActionFormalChoice(
 		return null;
 
 	const profileByChoice: Record<ActionStartChoiceId, ProfileDelta> = {
-		A: { C: 2, P: 1 },
-		B: { G: 3, A: 1 },
+		A: { C: 3 },
+		B: { G: 3 },
 		C: { I: 1, C: 2 },
 		D: { D: 2 },
 	};

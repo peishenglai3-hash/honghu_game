@@ -1,8 +1,7 @@
 // 第三章完整契约校验：七个正式选择、章末收束、资源入口和逐项数值汇总。
-// The supplied chapter-end range table is kept as a source-level reference.
-// Node-level choice deltas are authoritative for runtime behavior; if the
-// table does not arithmetically match those deltas, report the discrepancy
-// explicitly instead of silently rewriting player-facing outcomes.
+// The chapter-end ranges are recalculated from the per-choice values in the
+// supplied script. Those node-level values are authoritative for runtime
+// behavior; the old manually summed table was internally inconsistent.
 import.meta.env = { BASE_URL: "/", MODE: "test", DEV: false, PROD: false };
 
 import { access, stat } from "node:fs/promises";
@@ -115,16 +114,16 @@ const computedRiskRange = Object.fromEntries(
 	}),
 );
 
-const documentedProfileMax = { I: 12, C: 13, G: 14, A: 6, P: 8, D: 8 };
-const documentedRiskRange = {
+const chapterSpecProfileMax = { D: 10, C: 15, I: 16, G: 20, P: 9, A: 5 };
+const chapterSpecRiskRange = {
 	identity: { min: 0, max: 0 },
-	execution: { min: -4, max: 8 },
-	coordination: { min: -4, max: 12 },
+	execution: { min: -5, max: 7 },
+	coordination: { min: -5, max: 12 },
 };
-const profileRangeMismatch = axes.filter((axis) => computedProfileMax[axis] !== documentedProfileMax[axis]);
+const profileRangeMismatch = axes.filter((axis) => computedProfileMax[axis] !== chapterSpecProfileMax[axis]);
 const riskRangeMismatch = ["identity", "execution", "coordination"].filter((dimension) =>
-	computedRiskRange[dimension].min !== documentedRiskRange[dimension].min ||
-	computedRiskRange[dimension].max !== documentedRiskRange[dimension].max,
+	computedRiskRange[dimension].min !== chapterSpecRiskRange[dimension].min ||
+	computedRiskRange[dimension].max !== chapterSpecRiskRange[dimension].max,
 );
 
 assert(CH03_CHAPTER_END_FLAGS.complete === "CH03_CHAPTER_END_COMPLETE", "chapter end completion flag");
@@ -140,19 +139,19 @@ for (const file of requiredFiles) {
 }
 
 const specRangeNote = profileRangeMismatch.length || riskRangeMismatch.length
-	? "节点级选择效果与剧本一致；章末理论区间表与逐项加总不一致，需内容方确认。"
-	: "章末理论区间表与逐项加总一致。";
+	? "章末理论区间与逐项剧本值不一致。"
+	: "章末理论区间已按逐项剧本值重新核算。";
 const status = profileRangeMismatch.length || riskRangeMismatch.length
-	? "CHAPTER3 CONTRACT PASS WITH SPEC RANGE NOTE"
+	? "CHAPTER3 CONTRACT FAIL"
 	: "CHAPTER3 CONTRACT PASS";
 console.log(JSON.stringify({
 	status,
 	specRangeNote,
 	formalChoiceNodes: builders.map((node) => node.name),
 	computedProfileMax,
-	documentedProfileMax,
+	chapterSpecProfileMax,
 	computedRiskRange,
-	documentedRiskRange,
+	chapterSpecRiskRange,
 	profileRangeMismatch,
 	riskRangeMismatch,
 	flags: CH03_CHAPTER_END_FLAGS,

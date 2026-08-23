@@ -271,8 +271,8 @@ assert(!actionForwardChoices.find((choice) => choice.id.endsWith("_C")).disabled
 assert(actionRearChoices.find((choice) => choice.id.endsWith("_C")).disabled, "rear support locks action supply check");
 
 const actionExpected = {
-	A: { profile: { C: 2, P: 1 }, risk: { execution: -1 } },
-	B: { profile: { G: 3, A: 1 }, risk: { coordination: -1 } },
+	A: { profile: { C: 3 }, risk: { execution: -1 } },
+	B: { profile: { G: 3 }, risk: { coordination: -1 } },
 	C: { profile: { I: 1, C: 2 }, risk: { execution: -1 } },
 	D: { profile: { D: 2 }, risk: { execution: 1, coordination: 2 } },
 };
