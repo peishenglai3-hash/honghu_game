@@ -10,6 +10,7 @@
 		"test:systems": "tsx scripts/validate-systems.mjs",
 		"test:ch03:contract": "tsx scripts/validate-ch03-contract.mjs",
 		"test:ch04:contract": "tsx scripts/validate-ch04-contract.mjs",
+		"test:player-matrix": "tsx scripts/verify-player-matrix.ts",
 		"test:names": "node scripts/validate-character-name-contract.mjs",
 		"test:audio-routing": "node scripts/validate-audio-routing.mjs",
 		"test:security:gray": "node scripts/security-gray-matrix.mjs",

@@ -82,6 +82,7 @@ export class TitleScene extends Phaser.Scene {
 				this.scene.stop("TitleScene");
 				game.scene.start("Scene01");
 				useGameSaveStore().autosave("PROLOGUE_SC01");
+				window.dispatchEvent(new CustomEvent("honghu:scene-enter", { detail: { sceneId: "PROLOGUE_SC01" } }));
 				useHudStore().showOverlay("Scene1Overlay");
 				break;
 			}

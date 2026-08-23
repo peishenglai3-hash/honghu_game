@@ -1,6 +1,7 @@
 node_modules/
 .vite-cache/
 dist/
+.tmp_e2e/
 *.log
 .DS_Store
 /项目规划（请勿同步）/

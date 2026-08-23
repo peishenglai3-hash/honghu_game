@@ -7,7 +7,7 @@
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useHudStore } from "@/stores/modules/hud";
 import { useDirectorStore } from "@/stores/modules/director";
 import Scene1Overlay from "@/components/biz/Scene1Overlay.vue";
@@ -29,13 +29,42 @@ import EndPanel from "@/components/ui/EndPanel.vue";
 import PortraitResultPanel from "@/components/ui/PortraitResultPanel.vue";
 import ChapterTitleCard from "@/components/ui/ChapterTitleCard.vue";
 import CombatHud from "@/components/ui/CombatHud.vue";
+import DesktopKeyGuide from "@/components/ui/DesktopKeyGuide.vue";
+import MobileControls from "@/components/ui/MobileControls.vue";
 import { useGameStateStore } from "@/stores/modules/gameState";
+import { useGameSaveStore } from "@/stores";
+import { isMobileDevice, watchDeviceChange } from "@/common/device";
 
 const hud = useHudStore();
 const directorStore = useDirectorStore();
+const gameSave = useGameSaveStore();
+const gameState = useGameStateStore();
 const gameEl = ref<HTMLElement | null>(null);
+const mobile = ref(isMobileDevice());
+const gameStarted = ref(
+	typeof window !== "undefined" && new URLSearchParams(window.location.search).has("chapter"),
+);
+const prologueKeyGuide = ref(false);
+let stopWatchingDevice = () => {};
+
+const showDesktopKeyGuide = computed(() =>
+	gameStarted.value && prologueKeyGuide.value && !mobile.value && !hud.overlay,
+);
 
 onMounted(() => {
+	stopWatchingDevice = watchDeviceChange(() => {
+		mobile.value = isMobileDevice();
+	});
+	const initialScene = gameSave.getCurrentSceneId();
+	const directEntry = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("chapter");
+	prologueKeyGuide.value = !directEntry && initialScene.startsWith("PROLOGUE") && !gameState.state.flags.has("PROLOGUE_COMPLETED");
+	const onSceneEnter = (event: Event) => {
+		const sceneId = (event as CustomEvent<{ sceneId?: string }>).detail?.sceneId || "";
+		gameStarted.value = true;
+		prologueKeyGuide.value = sceneId.startsWith("PROLOGUE");
+	};
+	window.addEventListener("honghu:scene-enter", onSceneEnter);
+	(window as any).__honghuAppCleanup = () => window.removeEventListener("honghu:scene-enter", onSceneEnter);
 	directorStore.init(gameEl.value!);
 
 	if (import.meta.env.DEV) {
@@ -60,14 +89,22 @@ onMounted(() => {
 
 // 开场视频开始播放：解锁 Web Audio
 function onStart() {
+	gameStarted.value = true;
 	directorStore.transitionAudio.prime();
 }
 
 // 开场视频结束（或被跳过）：起 BGM 并放开场景探索
 function onDone() {
+	gameStarted.value = true;
+	prologueKeyGuide.value = true;
 	directorStore.bgm.play().catch(() => {});
 	directorStore.beginPrologueExplore();
 }
+
+onUnmounted(() => {
+	stopWatchingDevice();
+	(window as any).__honghuAppCleanup?.();
+});
 </script>
 
 <template>
@@ -91,4 +128,6 @@ function onDone() {
 	<PortraitResultPanel />
 	<ChapterTitleCard />
 	<CombatHud />
+	<DesktopKeyGuide v-if="showDesktopKeyGuide" />
+	<MobileControls :enabled="gameStarted" />
 </template>

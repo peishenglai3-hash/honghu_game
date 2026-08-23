@@ -108,7 +108,7 @@ try {
 	if (
 		result.imageWidth !== 1536 ||
 		result.imageHeight !== 1024 ||
-		!result.hint.includes("Space") ||
+		!result.hint.includes("空格") ||
 		result.mode !== "result" ||
 		result.risk.execution !== 0 ||
 		result.profile.C !== 3 ||
@@ -204,7 +204,7 @@ try {
 	if (
 		gateResult.imageWidth !== 1672 ||
 		gateResult.imageHeight !== 941 ||
-		!gateResult.hint.includes("Space") ||
+		!gateResult.hint.includes("空格") ||
 		gateResult.mode !== "result" ||
 		gateResult.risk.execution !== 0 ||
 		gateResult.risk.coordination !== 0 ||

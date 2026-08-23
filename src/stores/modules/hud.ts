@@ -23,6 +23,7 @@ export interface NarrativeEntry {
 export interface TaskCard {
   title: string;
   detail: string;
+  guidance?: string;
 }
 
 export interface TaskCardEntry extends TaskCard {
@@ -131,6 +132,60 @@ function normalizedDevPlayerTuning(value: unknown, fallback = DEV_PLAYER_TUNING_
   return Number.isFinite(numeric) ? clampDevPlayerTuning(numeric) : fallback;
 }
 
+function inferTaskGuidance(task: TaskCard): string | undefined {
+	const text = `${task.title} ${task.detail}`;
+
+	// 任务提示必须按剧情节点匹配，不能用“门边”等泛化词兜底。
+	// 第二章的正厅、渔民和第一章的半掩木门都可能出现“门边”，
+	// 但它们对应的是不同的交互对象；标题优先能避免提示串线。
+	const guidanceRules: Array<[RegExp, string]> = [
+		[/名字留在纸上.*查看纪念碑|查看纪念碑、笔记或采访设备/, "查看纪念碑、笔记和采访设备"],
+		[/名字留在纸上|纪念碑附近|碑文|确认笔记中的那个名字/, "前往纪念碑查看碑文与姓名"],
+		[/整理今天的材料|录音听完了|没写完的问题补完/, "先听录音再补完问题"],
+		[/完成三处固定观察/, "依次查看铜盆、书案与门边衣物"],
+		[/回应家人|家人的问话/, "找到家人并回应这段问话"],
+		[/查看未干的墨|回到书案|查看纸与笔/, "回到书案查看纸张与未干的墨"],
+		[/门外有人/, "走到半掩木门前查看来人"],
+		[/离开陈家|推开半掩的木门/, "推开半掩木门进入院子"],
+		[/闪回·状纸.*状纸写好了|状纸写好了.*交给渔民/, "把写好的状纸交给渔民"],
+		[/闪回·状纸/, "到门边听渔民把话说完"],
+		[/院墙阴影下：联络通知/, "走近右侧联络人听通知"],
+		[/走到院墙下|院墙阴影下|联络人/, "前往院墙下与联络人交谈"],
+
+		[/抵达·陈家祠堂/, "前往正厅门口听取接应"],
+		[/正厅内的部署/, "在正厅门口听取行动部署"],
+		[/闪回二/, "按 E 进入抓壮丁闪回"],
+		[/祠堂会议：宣布战时纪律/, "前往正厅矮桌旁听纪律"],
+		[/正式选择一：接受小组安排/, "找黄色感叹号标记的负责人"],
+		[/正式选择一｜完成/, "前往侧墙物资包裹处"],
+		[/物资准备/, "到侧墙包裹旁找组长"],
+		[/正式选择二：协助准备｜完成/, "按 E 进入出发前交代"],
+
+		[/第三章·杜家大院外围/, "前往隐蔽处等待行动"],
+		[/行动前重新安排/, "查看组长重新安排的任务"],
+		[/交互一.*等待行动时的观察/, "在隐蔽处选择观察重点"],
+		[/闪回三/, "按 E 进入门外闪回"],
+		[/行动开始：三路同时展开/, "按 E 开始三路合围行动"],
+		[/大门受阻：决定火攻榨房/, "前往组长处听火攻安排"],
+		[/交互二：大门合拢后/, "选择先稳住哪一处"],
+		[/交互三：撞门前/, "在前门附近选择进入位置"],
+		[/交互三完成|大门撞开：三路合拢/, "进入院内控制团丁并跟随"],
+		[/交互四：杜老三逃走后/, "找组长确认院内控制安排"],
+		[/战后清点：行动结束后的第一件事/, "找组长选择优先协助事项"],
+		[/交互六：月饼的处理/, "找组长决定月饼如何处理"],
+		[/行动结束：三路结果汇合/, "找组长听取三路汇合结果"],
+		[/行动前撤换|行动后撤回|暂停参与|突入暂时受阻/, "按 E 查看撤回安排"],
+
+		[/补完序章|怎样补完这句话|最终选择/, "阅读材料后选择补完答案"],
+		[/画像结算/, "查看本次画像结算结果"],
+	];
+
+	for (const [pattern, guidance] of guidanceRules) {
+		if (pattern.test(text)) return guidance;
+	}
+	return undefined;
+}
+
 // ===== 覆盖层场景类型（全屏流程组件，同一时刻只显示一个） =====
 
 export type SceneOverlay = "Scene1Overlay" | "Scene2Overlay" | "Scene3Overlay" | null;
@@ -176,7 +231,7 @@ export const useHudStore = defineStore("hud", () => {
     displayedText: "",
     cps: 14,
     typing: false,
-    hint: "Space 继续",
+    hint: "空格 继续",
   });
 
   // --- item panel ---
@@ -286,7 +341,7 @@ export const useHudStore = defineStore("hud", () => {
     dialogue.displayedText = "";
     dialogue.cps = cps;
     dialogue.typing = true;
-    dialogue.hint = "Space 继续";
+    dialogue.hint = "空格 继续";
 
     // 打字动画
     if (_narrativeTimer) window.clearInterval(_narrativeTimer);
@@ -459,7 +514,7 @@ export const useHudStore = defineStore("hud", () => {
   // --- 任务卡片（两段式：居中强制确认 → 右上角待办） ---
   function showTask(task: TaskCard, centerWhenEmpty = true) {
     const shouldCenter = centerWhenEmpty && taskCards.value.length === 0;
-    const entry = { ...task, id: ++_taskId };
+    const entry = { ...task, guidance: task.guidance || inferTaskGuidance(task), id: ++_taskId };
     taskCards.value.unshift(entry);
     taskWindowStart.value = 0;
     gameState.state.taskOpen = true;

@@ -163,7 +163,7 @@ export class Ch04FinalChoiceScene extends Phaser.Scene {
 			result: choice.pages[0].result,
 			pages: choice.pages,
 			pageIndex: 0,
-			hint: "Space 继续",
+			hint: "空格 继续",
 			onComplete: () => this.completeChoice(),
 		});
 	}

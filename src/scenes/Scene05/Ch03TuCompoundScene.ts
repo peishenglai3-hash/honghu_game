@@ -804,9 +804,9 @@ export class Ch03TuCompoundScene extends Phaser.Scene {
 			image: observationImagePath(choice),
 			result: [
 				`你选择了“${available.label}”。`,
-				"当前观察已记录。按 Space 退出图片，进入心理描写。",
+				"当前观察已记录。按空格退出图片，进入心理描写。",
 			],
-			hint: "Space 退出",
+			hint: "空格 退出",
 		});
 	}
 
@@ -943,9 +943,9 @@ export class Ch03TuCompoundScene extends Phaser.Scene {
 			image: actionImagePath(choice),
 			result: [
 				`你选择了“${available.label}”。`,
-				"当前判断已记录。按 Space 退出图片，进入心理描写。",
+				"当前判断已记录。按空格退出图片，进入心理描写。",
 			],
-			hint: "Space 退出",
+			hint: "空格 退出",
 		});
 	}
 
@@ -1115,9 +1115,9 @@ export class Ch03TuCompoundScene extends Phaser.Scene {
 			image: gateEntryImagePath(choice),
 			result: [
 				`你选择了“${available.label}”。`,
-				"当前判断已记录。按 Space 退出图片，进入行动反馈。",
+				"当前判断已记录。按空格退出图片，进入行动反馈。",
 			],
-			hint: "Space 退出",
+			hint: "空格 退出",
 		});
 	}
 
@@ -1256,9 +1256,9 @@ export class Ch03TuCompoundScene extends Phaser.Scene {
 			image: afterBattleImagePath(choice),
 			result: [
 				`你选择了“${available.label}”。`,
-				"当前处置已记录。按 Space 退出图片，进入行动反馈。",
+				"当前处置已记录。按空格退出图片，进入行动反馈。",
 			],
-			hint: "Space 退出",
+			hint: "空格 退出",
 		});
 	}
 
@@ -1342,9 +1342,9 @@ export class Ch03TuCompoundScene extends Phaser.Scene {
 			image: clearingImagePath(choice),
 			result: [
 				`你选择了“${available.label}”。`,
-				"当前处置已记录。按 Space 退出图片，进入清点反馈。",
+				"当前处置已记录。按空格退出图片，进入清点反馈。",
 			],
-			hint: "Space 退出",
+			hint: "空格 退出",
 		});
 	}
 
@@ -1419,9 +1419,10 @@ export class Ch03TuCompoundScene extends Phaser.Scene {
 		const definition = buildChapter3MooncakeFormalChoice(id);
 		if (!definition) return;
 		applyFormalChoice(this.state, definition);
-		useGameSaveStore().autosave("CH03_COMPOUND");
 		this.state.propStates.mooncake = moonCakeStatus(choice);
 		this.mooncakeChoice = choice;
+		// 先写入物件状态，再保存，避免结果页中断时标签与月饼状态不一致。
+		useGameSaveStore().autosave("CH03_COMPOUND");
 		this.afterBattlePhase = "moon_cake_result";
 		hideChoices();
 		hidePrompt();
@@ -1431,9 +1432,9 @@ export class Ch03TuCompoundScene extends Phaser.Scene {
 			image: mooncakeImagePath(choice),
 			result: [
 				`你选择了“${available.label}”。`,
-				"月饼处理结果已记录。按 Space 退出图片，进入月饼处理反馈。",
+				"月饼处理结果已记录。按空格退出图片，进入月饼处理反馈。",
 			],
-			hint: "Space 退出",
+			hint: "空格 退出",
 		});
 	}
 

@@ -995,6 +995,8 @@ export const useDirectorStore = defineStore("director", () => {
 
 	function enterScene(key: string, sceneId: SceneId): void {
 		gameSave.autosave(sceneId);
+		if (typeof window !== "undefined")
+			window.dispatchEvent(new CustomEvent("honghu:scene-enter", { detail: { sceneId } }));
 		game.value!.scene.start(key);
 	}
 

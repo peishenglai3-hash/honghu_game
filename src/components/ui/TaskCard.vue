@@ -16,6 +16,7 @@ const hud = useHudStore();
 				:style="{ '--task-index': index, zIndex: 28 - index }"
 			>
 				<strong>{{ task.title }}</strong>
+				<span v-if="task.guidance" class="task-guidance">目标：{{ task.guidance }}</span>
 				<span class="task-detail">{{ task.detail }}</span>
 				<span
 					v-if="task.id === hud.taskCenterId || (!hud.taskCenter && index === 0)"
@@ -65,11 +66,11 @@ const hud = useHudStore();
 .task-card {
 	--task-index: 0;
 	position: absolute;
-	top: calc(16px + var(--task-index) * 94px);
+	top: calc(16px + var(--task-index) * 132px);
 	right: clamp(36px, 3vw, 48px);
-	width: min(280px, 26vw);
-	height: 84px;
-	padding: 10px 12px;
+	width: min(360px, 32vw);
+	height: 124px;
+	padding: 10px 14px 32px;
 	overflow: hidden;
 	display: flex;
 	flex-direction: column;
@@ -102,17 +103,28 @@ const hud = useHudStore();
 	font-size: 14px;
 	letter-spacing: 0.06em;
 	line-height: 1.2;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .task-detail {
 	display: -webkit-box !important;
 	margin-top: 4px;
-	padding-right: 58px;
 	overflow: hidden;
 	font-size: 12px;
 	line-height: 1.35;
 	-webkit-box-orient: vertical;
 	-webkit-line-clamp: 2;
+}
+
+.task-guidance {
+	color: #f0c873;
+	font-size: 11px;
+	line-height: 1.2;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
 }
 
 .task-dismiss {
@@ -167,6 +179,10 @@ kbd {
 	display: block !important;
 	padding-right: 0;
 	font-size: 13px;
+	text-align: center;
+}
+
+.task-card.center .task-guidance {
 	text-align: center;
 }
 
@@ -243,10 +259,11 @@ kbd {
 
 @media (max-width: 850px) {
 	.task-card {
-		top: calc(10px + var(--task-index) * 86px);
+		top: calc(10px + var(--task-index) * 130px);
 		right: 42px;
-		width: min(42vw, 250px);
-		height: 76px;
+		width: min(68vw, 320px);
+		height: 116px;
+		padding: 9px 11px 30px;
 	}
 
 	.task-card.center {

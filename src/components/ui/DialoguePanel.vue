@@ -4,6 +4,12 @@ const hud = useHudStore();
 
 const assetBase = import.meta.env.BASE_URL || "/";
 const smoothAvatarIds = new Set(["ch02-chen", "ch01-fisherman"]);
+
+function onPointerDown(event: PointerEvent) {
+	if (event.pointerType !== "touch") return;
+	event.preventDefault();
+	hud.advanceNarrative();
+}
 </script>
 
 <template>
@@ -11,6 +17,7 @@ const smoothAvatarIds = new Set(["ch02-chen", "ch01-fisherman"]);
 		v-if="hud.dialogue.visible"
 		class="dialogue-panel"
 		:class="hud.dialogue.style"
+		@pointerdown="onPointerDown"
 		role="dialog"
 		aria-live="polite"
 		aria-label="剧情对话"
@@ -51,6 +58,7 @@ const smoothAvatarIds = new Set(["ch02-chen", "ch01-fisherman"]);
 	width: min(480px, calc(100% - 32px));
 	aspect-ratio: 2629 / 1398;
 	pointer-events: auto;
+	touch-action: manipulation;
 	background: url("/assets/ui/keyed/dialogue.png") center / 100% 100%
 		no-repeat;
 	z-index: 20;

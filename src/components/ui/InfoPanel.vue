@@ -34,7 +34,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeyDown, true));
 				<li v-for="item in hud.infoPanel.items" :key="item">{{ item }}</li>
 			</ul>
 			<button type="button" @click="onContinue">
-				<kbd>Space</kbd>
+				<kbd>空格</kbd>
 				{{ hud.infoPanel.continueLabel || "继续" }}
 			</button>
 		</section>

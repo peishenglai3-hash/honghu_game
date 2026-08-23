@@ -9,7 +9,7 @@ const hud = useHudStore();
 		<div class="result-copy">
 			<span>{{ hud.resultPanel.pages ? hud.resultPanel.result[0] : `…${hud.resultPanel.result[0]}` }}</span>
 			<span v-if="hud.resultPanel.result[1]">{{ hud.resultPanel.result[1] }}</span>
-			<small>{{ hud.resultPanel.hint || "Space 继续" }}</small>
+			<small>{{ hud.resultPanel.hint || "空格 继续" }}</small>
 		</div>
 	</div>
 </template>

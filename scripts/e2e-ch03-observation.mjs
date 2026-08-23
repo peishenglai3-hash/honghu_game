@@ -112,7 +112,7 @@ try {
 			`observation result image dimensions mismatch: ${JSON.stringify(result)}`,
 		);
 	}
-	if (!result.hint.includes("Space") || result.mode !== "result") {
+	if (!result.hint.includes("空格") || result.mode !== "result") {
 		throw new Error(
 			`observation result exit contract mismatch: ${JSON.stringify(result)}`,
 		);
