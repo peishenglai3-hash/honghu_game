@@ -32,6 +32,10 @@ import {
 	preloadCh04TempleCharacters,
 	setupCh04TempleActors,
 } from "./ch04TemplePresentation";
+// @ts-ignore Shared JS helpers are intentionally untyped in the current project.
+import { ensureActorVisualConfig, createActorVisualEntry } from "../../actor-collider.js";
+// @ts-ignore Shared developer editor is JavaScript and used by existing scenes.
+import { CollisionEditor } from "../../zone-editor.js";
 
 const WORLD_W = 1664;
 const WORLD_H = 936;
@@ -46,11 +50,15 @@ const SCENE_COMPLETE_FLAG = "CH04_SC02_COMPLETE";
  * 一个事件，由导演层接收并接入后续穿越剧情。
  */
 export class Ch04ConsciousnessScene extends Phaser.Scene {
+	zoneEditor: any;
 	shot: Ch04TempleShot = "SHOT_WIDE";
 	definition = CH04_WANGYE_TEMPLE_MAPS.SHOT_WIDE;
 	objectDocument!: LayeredMapObjectDocument;
+	mapDocumentFile = "";
 	actors: Phaser.GameObjects.Image[] = [];
 	ambientActors: Phaser.GameObjects.Image[] = [];
+	actorVisualProfiles: Record<string, any> = {};
+	actorVisualEntries: any[] = [];
 	instabilityGhosts: Phaser.GameObjects.Image[] = [];
 	flagGraphic?: Phaser.GameObjects.Graphics;
 	instabilityGraphic?: Phaser.GameObjects.Graphics;
@@ -69,6 +77,8 @@ export class Ch04ConsciousnessScene extends Phaser.Scene {
 		this.definition = CH04_WANGYE_TEMPLE_MAPS[this.shot];
 		this.actors = [];
 		this.ambientActors = [];
+		this.actorVisualProfiles = {};
+		this.actorVisualEntries = [];
 		this.instabilityGhosts = [];
 		this.flagGraphic = undefined;
 		this.instabilityGraphic = undefined;
@@ -101,6 +111,9 @@ export class Ch04ConsciousnessScene extends Phaser.Scene {
 		this.ambientActors = people.ambientActors;
 		this.instabilityGhosts = people.instabilityGhosts;
 		this.flagGraphic = createCh04TempleFlag(this, 1);
+		this.mapDocumentFile = `public/data/${this.definition.objectPath.replace(/^data\//, "")}`;
+		this.registerTempleActorVisuals();
+		this.setupZoneEditor();
 		this.setupInstabilityDetails();
 
 		this.completed = this.state.flags.has(SCENE_COMPLETE_FLAG);
@@ -165,6 +178,91 @@ export class Ch04ConsciousnessScene extends Phaser.Scene {
 			yoyo: true,
 			repeat: -1,
 			ease: "Sine.InOut",
+		});
+	}
+
+	/* ===== P 键开发者工具：角色贴图识别 ===== */
+
+	registerTempleActorVisuals() {
+		for (const actor of this.actors) {
+			this.registerTempleActorVisual(actor.name, actor, actor.x, actor.y);
+		}
+	}
+
+	registerTempleActorVisual(id: string, actor: Phaser.GameObjects.Image, x: number, y: number) {
+		const profile = this.actorVisualProfiles[id]
+			?? (this.actorVisualProfiles[id] = ensureActorVisualConfig(this.objectDocument as any, id, actor.displayHeight || 100, { x, y }));
+		if (!Array.isArray(profile.position)) {
+			profile.position = [x + (profile.offset?.[0] ?? 0), y + (profile.offset?.[1] ?? 0)];
+			profile.offset = [0, 0];
+		}
+		if (!this.actorVisualEntries.some((entry) => entry.id === id)) {
+			this.actorVisualEntries.push(createActorVisualEntry({
+				id,
+				label: `NPC · ${id}`,
+				getActor: () => actor,
+				getProfile: () => this.actorVisualProfiles[id],
+				getAnchor: () => ({ x, y }),
+				onPositionChange: () => this.applyActorVisualPosition(id),
+				absolutePosition: true,
+				tileSize: 1,
+			}));
+		}
+		this.applyActorVisualHeight(id, profile.display_height);
+	}
+
+	applyActorVisualHeight(id: string, height: number) {
+		if (!Number.isFinite(height) || height <= 0) return;
+		const actor = this.actorVisualEntries.find((entry) => entry.id === id)?.getActor?.();
+		const source = actor?.texture?.getSourceImage?.() as HTMLImageElement | undefined;
+		if (!actor || !source?.height) return;
+		actor.setDisplaySize(Math.round((source.width / source.height) * height), height);
+		actor.setVisible(this.actorVisualProfiles[id]?.enabled !== false);
+		this.applyActorVisualPosition(id);
+	}
+
+	applyActorVisualPosition(id: string) {
+		const actor = this.actorVisualEntries.find((entry) => entry.id === id)?.getActor?.();
+		const profile = this.actorVisualProfiles[id];
+		if (!actor || !profile) return;
+		const position = profile.position;
+		const offset = profile.offset ?? [0, 0];
+		actor.setPosition(position?.[0] ?? actor.x + offset[0], position?.[1] ?? actor.y + offset[1]);
+	}
+
+	setupZoneEditor() {
+		if (!import.meta.env.DEV) return;
+		const documents = { [this.mapDocumentFile]: this.objectDocument };
+		this.zoneEditor = new CollisionEditor(this, {
+			documents,
+			tileSize: 1,
+			snapStep: 1,
+			getCollisions: () => [],
+			getInteractions: () => [],
+			getForegrounds: () => [],
+			getWorldSize: () => [WORLD_W, WORLD_H],
+			getActorColliders: () => [],
+			getActorVisuals: () => this.actorVisualEntries,
+			onActorVisualChange: (id: string, height: number) => this.applyActorVisualHeight(id, height),
+			replaceDocuments: (next: any) => {
+				this.objectDocument = next[this.mapDocumentFile];
+				for (const actor of [...this.actors, ...this.instabilityGhosts]) actor.destroy();
+				this.actors = [];
+				this.ambientActors = [];
+				this.instabilityGhosts = [];
+				this.actorVisualEntries = [];
+				this.flagGraphic?.destroy();
+				const people = setupCh04TempleActors(this, this.objectDocument, {
+					unstable: true,
+					animateAmbient: false,
+				});
+				this.actors = people.actors;
+				this.ambientActors = people.ambientActors;
+				this.instabilityGhosts = people.instabilityGhosts;
+				this.flagGraphic = createCh04TempleFlag(this, 1);
+				this.registerTempleActorVisuals();
+			},
+			onChange: () => {},
 		});
 	}
 

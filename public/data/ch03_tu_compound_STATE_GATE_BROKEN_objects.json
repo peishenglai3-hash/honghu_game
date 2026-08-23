@@ -1,6 +1,5 @@
 {
   "map_id": "MAP_CH3_TU_COMPOUND",
-  "state_id": "STATE_GATE_BROKEN",
   "canvas": {
     "width": 1664,
     "height": 936
@@ -12,21 +11,23 @@
       "id": "COL_HALL_FOOTPRINT",
       "type": "collision",
       "rect": [
-        235,
-        70,
+        203,
+        0,
         640,
-        390
-      ]
+        411
+      ],
+      "rotation": 0
     },
     {
       "id": "COL_OIL_PRESS_FOOTPRINT",
       "type": "collision",
       "rect": [
-        1030,
-        50,
+        1049,
+        0,
         510,
         555
-      ]
+      ],
+      "rotation": 0
     },
     {
       "id": "COL_FRONT_WALL_LEFT",
@@ -36,7 +37,8 @@
         650,
         430,
         190
-      ]
+      ],
+      "rotation": 0
     },
     {
       "id": "COL_FRONT_WALL_RIGHT",
@@ -46,7 +48,8 @@
         650,
         545,
         190
-      ]
+      ],
+      "rotation": 0
     },
     {
       "id": "COL_TREE_SHADOW",
@@ -56,17 +59,64 @@
         400,
         360,
         536
-      ]
+      ],
+      "rotation": 0
     },
     {
       "id": "COL_BANQUET_TABLE",
       "type": "collision",
       "rect": [
-        345,
-        225,
+        632.5,
+        675,
         455,
-        190
-      ]
+        96
+      ],
+      "rotation": 0
+    },
+    {
+      "id": "COL_GATE_LEAF_LEFT",
+      "type": "collision",
+      "rect": [
+        635,
+        690,
+        145,
+        180
+      ],
+      "rotation": 0
+    },
+    {
+      "id": "COL_GATE_LEAF_RIGHT",
+      "type": "collision",
+      "rect": [
+        900,
+        690,
+        145,
+        180
+      ],
+      "rotation": 0
+    },
+    {
+      "id": "HAZARD_OIL_PRESS_FIRE",
+      "type": "collision",
+      "rect": [
+        1050,
+        126.5,
+        520,
+        565
+      ],
+      "hazard": "fire",
+      "rotation": 0
+    },
+    {
+      "id": "COL_RAM_POLE_REST",
+      "type": "collision",
+      "rect": [
+        675,
+        820,
+        360,
+        116
+      ],
+      "rotation": 0
     },
     {
       "id": "TRG_HIDING_ZONE",
@@ -209,26 +259,6 @@
       "destination": "rear_or_street_direction"
     },
     {
-      "id": "COL_GATE_LEAF_LEFT",
-      "type": "collision",
-      "rect": [
-        635,
-        690,
-        145,
-        180
-      ]
-    },
-    {
-      "id": "COL_GATE_LEAF_RIGHT",
-      "type": "collision",
-      "rect": [
-        900,
-        690,
-        145,
-        180
-      ]
-    },
-    {
       "id": "EXIT_FRONT_GATE",
       "type": "exit",
       "rect": [
@@ -238,27 +268,6 @@
         201
       ],
       "destination": "front_road"
-    },
-    {
-      "id": "HAZARD_OIL_PRESS_FIRE",
-      "type": "collision",
-      "rect": [
-        1035,
-        45,
-        520,
-        565
-      ],
-      "hazard": "fire"
-    },
-    {
-      "id": "COL_RAM_POLE_REST",
-      "type": "collision",
-      "rect": [
-        675,
-        820,
-        360,
-        116
-      ]
     },
     {
       "id": "TRG_BREACH",
@@ -271,5 +280,90 @@
       ],
       "action": "enter_breached_gate"
     }
-  ]
+  ],
+  "state_id": "STATE_GATE_BROKEN",
+  "actor_visuals": {
+    "PLAYER": {
+      "display_height": 172,
+      "offset": [
+        0,
+        0
+      ],
+      "position": [
+        488.3992149443974,
+        570.0496609719837
+      ]
+    },
+    "DONG_YUNTING": {
+      "display_height": 112,
+      "offset": [
+        0,
+        0
+      ],
+      "position": [
+        965.4076826486988,
+        423.59167102450317
+      ]
+    },
+    "MILITIA_01": {
+      "display_height": 94.48898547634155,
+      "offset": [
+        0,
+        0
+      ],
+      "position": [
+        642.3751122064729,
+        500.23150372867667
+      ]
+    },
+    "MILITIA_02": {
+      "display_height": 114,
+      "offset": [
+        0,
+        0
+      ],
+      "position": [
+        624.3184648954742,
+        641.980835694232
+      ]
+    },
+    "MILITIA_03": {
+      "display_height": 114,
+      "offset": [
+        0,
+        0
+      ],
+      "position": [
+        1103.3829369623343,
+        579.2574454802495
+      ]
+    },
+    "MILITIA_04": {
+      "display_height": 114,
+      "offset": [
+        0,
+        0
+      ],
+      "position": [
+        848.6747039026801,
+        537.8495716167145
+      ]
+    }
+  },
+  "actor_colliders": {
+    "PLAYER": {
+      "offset": [
+        -18,
+        -28
+      ],
+      "size": [
+        36,
+        28
+      ]
+    }
+  },
+  "player_motion": {
+    "movement_multiplier": 1,
+    "animation_multiplier": 1
+  }
 }

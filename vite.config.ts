@@ -25,6 +25,16 @@ const writableFiles = new Set([
 	"public/data/ch02_ancestral_hall_main_objects.json",
 	"public/data/ch02_ancestral_hall_mainhall_close_objects.json",
 	"public/data/ch02_ancestral_hall_sidewall_objects.json",
+	"public/data/ch03_tu_compound_STATE_WAITING_objects.json",
+	"public/data/ch03_tu_compound_STATE_GATE_CLOSED_objects.json",
+	"public/data/ch03_tu_compound_STATE_GATE_ATTACK_objects.json",
+	"public/data/ch03_tu_compound_STATE_FIRE_STARTED_objects.json",
+	"public/data/ch03_tu_compound_STATE_GATE_BROKEN_objects.json",
+	"public/data/ch03_tu_compound_STATE_AFTER_BATTLE_objects.json",
+	"public/data/ch03_tu_compound_STATE_DEPARTURE_objects.json",
+	"public/data/ch04_wangye_temple_shot_wide_objects.json",
+	"public/data/ch04_wangye_temple_shot_medium_objects.json",
+	"public/data/ch04_wangye_temple_shot_close_objects.json",
 ]);
 
 const MAX_ZONE_REQUEST_BYTES = 256 * 1024;

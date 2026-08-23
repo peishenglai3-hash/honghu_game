@@ -35,29 +35,38 @@ function onKeyDown(event: KeyboardEvent) {
 	const available = usableIndices();
 	if (!available.length) return;
 
-	const letterIndex = ["a", "b", "c", "d"].indexOf(event.key.toLowerCase());
-	if (letterIndex >= 0 && available.includes(letterIndex)) {
+	if (event.key === " " || event.code === "Space") {
 		event.preventDefault();
 		event.stopPropagation();
-		onChoose(panel.items[letterIndex].id);
 		return;
 	}
 
-	if (event.key === "ArrowDown" || event.key === "ArrowRight") {
+	const numberIndex = ["1", "2", "3", "4"].indexOf(event.key);
+	const codeIndex = ["Digit1", "Digit2", "Digit3", "Digit4"].indexOf(event.code);
+	const choiceIndex = numberIndex >= 0 ? numberIndex : codeIndex;
+	if (choiceIndex >= 0 && available.includes(choiceIndex)) {
+		event.preventDefault();
+		event.stopPropagation();
+		focusChoice(choiceIndex);
+		return;
+	}
+
+	if (event.key === "ArrowDown" || event.key === "ArrowUp") {
 		event.preventDefault();
 		event.stopPropagation();
 		const current = Math.max(0, available.indexOf(activeIndex.value));
-		focusChoice(available[(current + 1) % available.length]);
+		const offset = event.key === "ArrowDown" ? 1 : -1;
+		focusChoice(available[(current + offset + available.length) % available.length]);
 		return;
 	}
-	if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
+
+	if (event.key === "Enter") {
 		event.preventDefault();
 		event.stopPropagation();
-		const current = Math.max(0, available.indexOf(activeIndex.value));
-		focusChoice(available[(current - 1 + available.length) % available.length]);
 		return;
 	}
-	if (event.key === "Enter" || event.key === " ") {
+
+	if (event.key.toLowerCase() === "e") {
 		event.preventDefault();
 		event.stopPropagation();
 		const item = panel.items[activeIndex.value];
@@ -86,17 +95,19 @@ onUnmounted(() => window.removeEventListener("keydown", onKeyDown, true));
 		aria-labelledby="choice-panel-title"
 	>
 		<div id="choice-panel-title" class="choice-title">{{ hud.choicePanel.title }}</div>
+		<div class="choice-hint">按1234进行选择，按下E确认选择</div>
 		<button
-			v-for="choice in hud.choicePanel.items"
+			v-for="(choice, index) in hud.choicePanel.items"
 			:key="choice.id"
-			:ref="(button) => setButton(button as HTMLButtonElement | null, hud.choicePanel?.items.indexOf(choice) ?? 0)"
+			:ref="(button) => setButton(button as HTMLButtonElement | null, index)"
 			type="button"
 			class="choice"
 			:class="{ 'choice--disabled': choice.disabled }"
 			:disabled="choice.disabled"
+			@focus="activeIndex = index"
 			@click="onChoose(choice.id)"
 		>
-			<b>[{{ choice.id.slice(-1) }}]</b>
+			<b>[{{ index + 1 }}]</b>
 			<span>
 				<strong>{{ choice.label }}</strong>
 			</span>
@@ -125,6 +136,13 @@ onUnmounted(() => window.removeEventListener("keydown", onKeyDown, true));
 	text-align: center;
 	color: #f8e9c2;
 	font-size: 1.35rem;
+	margin-bottom: 0.25rem;
+}
+
+.choice-hint {
+	text-align: center;
+	color: #d3ad64;
+	font-size: 0.85rem;
 	margin-bottom: 0.8rem;
 }
 
