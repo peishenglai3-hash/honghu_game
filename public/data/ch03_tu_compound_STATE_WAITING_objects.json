@@ -1,138 +1,232 @@
 {
   "map_id": "MAP_CH3_TU_COMPOUND",
-  "state_id": "STATE_WAITING",
   "canvas": {
     "width": 1664,
     "height": 936
   },
   "tile_size": 48,
   "coordinate_origin": "top_left",
+  "state_id": "STATE_WAITING",
   "objects": [
     {
       "id": "COL_HALL_FOOTPRINT",
-      "type": "collision",
       "rect": [
-        235,
-        70,
+        207,
+        14,
         640,
         390
-      ]
+      ],
+      "rotation": 0,
+      "type": "collision"
     },
     {
       "id": "COL_OIL_PRESS_FOOTPRINT",
-      "type": "collision",
       "rect": [
-        1030,
-        50,
+        1039,
+        17.75,
         510,
-        555
-      ]
-    },
-    {
-      "id": "COL_FRONT_WALL_LEFT",
-      "type": "collision",
-      "rect": [
-        205,
-        650,
-        430,
-        190
-      ]
+        612.5
+      ],
+      "rotation": 0,
+      "type": "collision"
     },
     {
       "id": "COL_FRONT_WALL_RIGHT",
-      "type": "collision",
       "rect": [
-        1040,
-        650,
+        1024.5,
+        640,
         545,
         190
-      ]
+      ],
+      "rotation": 0,
+      "type": "collision"
     },
     {
       "id": "COL_TREE_SHADOW",
-      "type": "collision",
       "rect": [
         0,
-        400,
+        399,
         360,
         536
-      ]
+      ],
+      "rotation": 0,
+      "type": "collision"
     },
     {
       "id": "COL_BANQUET_TABLE",
-      "type": "collision",
       "rect": [
-        345,
-        225,
-        455,
+        345.5,
+        604,
+        1224,
         190
-      ]
+      ],
+      "rotation": 0,
+      "type": "collision"
+    },
+    {
+      "id": "COL_GATE_LEAF_LEFT",
+      "rect": [
+        624.5,
+        756,
+        145,
+        180
+      ],
+      "rotation": 0,
+      "type": "collision"
+    },
+    {
+      "id": "COL_GATE_LEAF_RIGHT",
+      "rect": [
+        900,
+        690,
+        145,
+        180
+      ],
+      "rotation": 0,
+      "type": "collision"
     },
     {
       "id": "TRG_HIDING_ZONE",
-      "type": "interaction",
       "rect": [
-        200,
-        610,
+        258,
+        608,
         360,
         250
       ],
-      "action": "observe_waiting_position"
+      "action": "observe_waiting_position",
+      "type": "interaction"
     },
     {
       "id": "TRG_SPILLED_LEFTOVERS",
-      "type": "interaction",
       "rect": [
-        235,
-        790,
+        105.5,
+        16.5,
         235,
         125
       ],
-      "action": "inspect_leftovers"
+      "action": "inspect_leftovers",
+      "type": "interaction"
     },
     {
       "id": "TRG_BANQUET_REMAINS",
-      "type": "interaction",
       "rect": [
         315,
         180,
         520,
         290
       ],
-      "action": "inspect_banquet"
+      "action": "inspect_banquet",
+      "type": "interaction"
     },
     {
       "id": "TRG_OIL_PRESS",
-      "type": "interaction",
       "rect": [
         1005,
         55,
         565,
         560
       ],
-      "action": "inspect_oil_press"
+      "action": "inspect_oil_press",
+      "type": "interaction"
     },
     {
       "id": "TRG_GATE",
-      "type": "interaction",
       "rect": [
         620,
         630,
         440,
         245
       ],
-      "action": "inspect_gate"
+      "action": "inspect_gate",
+      "type": "interaction"
     },
     {
       "id": "TRG_BACK_ROUTE",
-      "type": "interaction",
       "rect": [
         820,
         0,
         225,
         275
       ],
-      "action": "observe_back_route"
+      "action": "observe_back_route",
+      "type": "interaction"
+    },
+    {
+      "id": "SPAWN_PLAYER_HIDING",
+      "type": "spawn",
+      "facing": "up",
+      "rect": [
+        430,
+        828,
+        48,
+        48
+      ]
+    },
+    {
+      "id": "SPAWN_FRONT_GROUP_A",
+      "type": "spawn",
+      "facing": "up",
+      "rect": [
+        600,
+        825,
+        48,
+        48
+      ]
+    },
+    {
+      "id": "SPAWN_FRONT_GROUP_B",
+      "type": "spawn",
+      "facing": "up",
+      "rect": [
+        1015,
+        825,
+        48,
+        48
+      ]
+    },
+    {
+      "id": "SPAWN_GATE_GUARD_LEFT",
+      "type": "spawn",
+      "facing": "up",
+      "rect": [
+        665,
+        760,
+        48,
+        48
+      ]
+    },
+    {
+      "id": "SPAWN_GATE_GUARD_RIGHT",
+      "type": "spawn",
+      "facing": "up",
+      "rect": [
+        970,
+        760,
+        48,
+        48
+      ]
+    },
+    {
+      "id": "EXIT_BACK_ROUTE",
+      "rect": [
+        835,
+        0,
+        190,
+        72
+      ],
+      "destination": "rear_or_street_direction",
+      "type": "exit"
+    },
+    {
+      "id": "EXIT_FRONT_GATE",
+      "rect": [
+        780,
+        735,
+        120,
+        201
+      ],
+      "destination": "front_road",
+      "type": "exit"
     },
     {
       "id": "CAM_OUTSIDE",
@@ -163,103 +257,112 @@
         734,
         675
       ]
-    },
-    {
-      "id": "SPAWN_PLAYER_HIDING",
-      "type": "spawn",
-      "rect": [
-        430,
-        760,
-        48,
-        48
-      ],
-      "facing": "up"
-    },
-    {
-      "id": "SPAWN_FRONT_GROUP_A",
-      "type": "spawn",
-      "rect": [
-        600,
-        825,
-        48,
-        48
-      ],
-      "runtime_group": "front_gate"
-    },
-    {
-      "id": "SPAWN_FRONT_GROUP_B",
-      "type": "spawn",
-      "rect": [
-        1015,
-        825,
-        48,
-        48
-      ],
-      "runtime_group": "front_gate"
-    },
-    {
-      "id": "EXIT_BACK_ROUTE",
-      "type": "exit",
-      "rect": [
-        835,
-        0,
-        190,
-        72
-      ],
-      "destination": "rear_or_street_direction"
-    },
-    {
-      "id": "COL_GATE_LEAF_LEFT",
-      "type": "collision",
-      "rect": [
-        635,
-        690,
-        145,
-        180
-      ]
-    },
-    {
-      "id": "COL_GATE_LEAF_RIGHT",
-      "type": "collision",
-      "rect": [
-        900,
-        690,
-        145,
-        180
-      ]
-    },
-    {
-      "id": "EXIT_FRONT_GATE",
-      "type": "exit",
-      "rect": [
-        780,
-        735,
-        120,
-        201
-      ],
-      "destination": "front_road"
-    },
-    {
-      "id": "SPAWN_GATE_GUARD_LEFT",
-      "type": "spawn",
-      "rect": [
-        665,
-        760,
-        48,
-        48
-      ],
-      "runtime_group": "guards"
-    },
-    {
-      "id": "SPAWN_GATE_GUARD_RIGHT",
-      "type": "spawn",
-      "rect": [
-        970,
-        760,
-        48,
-        48
-      ],
-      "runtime_group": "guards"
     }
-  ]
+  ],
+  "actor_colliders": {
+    "PLAYER": {
+      "offset": [
+        -28,
+        -36
+      ],
+      "size": [
+        56,
+        36
+      ]
+    }
+  },
+  "actor_visuals": {
+    "PLAYER": {
+      "display_height": 238.00591229500424,
+      "offset": [
+        -9.040116301767966,
+        14.321500910178315
+      ],
+      "position": [
+        444.95988369823203,
+        890.3215009101783
+      ]
+    },
+    "GATE_GUARD_A": {
+      "display_height": 146.2685169017636,
+      "offset": [
+        0,
+        0
+      ],
+      "position": [
+        615.5076265191914,
+        530.4275361478128
+      ]
+    },
+    "GATE_GUARD_B": {
+      "display_height": 145.77131261187384,
+      "offset": [
+        0,
+        0
+      ],
+      "position": [
+        1001.9058964276088,
+        553.9558215770176
+      ]
+    },
+    "GROUP_LEADER": {
+      "display_height": 215.18549562466387,
+      "offset": [
+        0,
+        0
+      ],
+      "position": [
+        552.7856914010292,
+        875
+      ]
+    },
+    "ELDER_ESCORT": {
+      "display_height": 214.41186049875785,
+      "offset": [
+        0,
+        0
+      ],
+      "position": [
+        468.0230112959615,
+        875
+      ]
+    },
+    "FRONT_MEMBER_A": {
+      "display_height": 201.88685370272935,
+      "offset": [
+        0,
+        0
+      ],
+      "position": [
+        699.8875819675458,
+        908.757928936475
+      ]
+    },
+    "FRONT_MEMBER_B": {
+      "display_height": 204.955781875738,
+      "offset": [
+        0,
+        0
+      ],
+      "position": [
+        950.4904324642285,
+        907.7349997065758
+      ]
+    },
+    "REAR_MEMBER": {
+      "display_height": 208.02463980709138,
+      "offset": [
+        0,
+        0
+      ],
+      "position": [
+        372.77824996232255,
+        875
+      ]
+    }
+  },
+  "player_motion": {
+    "movement_multiplier": 1,
+    "animation_multiplier": 1
+  }
 }

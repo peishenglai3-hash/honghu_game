@@ -16,7 +16,8 @@
         70,
         640,
         390
-      ]
+      ],
+      "rotation": 0
     },
     {
       "id": "COL_OIL_PRESS_FOOTPRINT",
@@ -26,7 +27,8 @@
         50,
         510,
         555
-      ]
+      ],
+      "rotation": 0
     },
     {
       "id": "COL_FRONT_WALL_LEFT",
@@ -36,7 +38,8 @@
         650,
         430,
         190
-      ]
+      ],
+      "rotation": 0
     },
     {
       "id": "COL_FRONT_WALL_RIGHT",
@@ -46,7 +49,8 @@
         650,
         545,
         190
-      ]
+      ],
+      "rotation": 0
     },
     {
       "id": "COL_TREE_SHADOW",
@@ -56,7 +60,8 @@
         400,
         360,
         536
-      ]
+      ],
+      "rotation": 0
     },
     {
       "id": "COL_BANQUET_TABLE",
@@ -66,7 +71,19 @@
         225,
         455,
         190
-      ]
+      ],
+      "rotation": 0
+    },
+    {
+      "id": "COL_GATE_CLOSED",
+      "type": "collision",
+      "rect": [
+        635,
+        665,
+        410,
+        190
+      ],
+      "rotation": 0
     },
     {
       "id": "TRG_HIDING_ZONE",
@@ -135,6 +152,52 @@
       "action": "observe_back_route"
     },
     {
+      "id": "SPAWN_PLAYER_HIDING",
+      "type": "spawn",
+      "rect": [
+        430,
+        828,
+        48,
+        48
+      ],
+      "facing": "up"
+    },
+    {
+      "id": "SPAWN_FRONT_GROUP_A",
+      "type": "spawn",
+      "rect": [
+        600,
+        825,
+        48,
+        48
+      ],
+      "runtime_group": "front_gate",
+      "facing": "up"
+    },
+    {
+      "id": "SPAWN_FRONT_GROUP_B",
+      "type": "spawn",
+      "rect": [
+        1015,
+        825,
+        48,
+        48
+      ],
+      "runtime_group": "front_gate",
+      "facing": "up"
+    },
+    {
+      "id": "EXIT_BACK_ROUTE",
+      "type": "exit",
+      "rect": [
+        835,
+        0,
+        190,
+        72
+      ],
+      "destination": "rear_or_street_direction"
+    },
+    {
       "id": "CAM_OUTSIDE",
       "type": "camera",
       "rect": [
@@ -163,60 +226,112 @@
         734,
         675
       ]
-    },
-    {
-      "id": "SPAWN_PLAYER_HIDING",
-      "type": "spawn",
-      "rect": [
-        430,
-        760,
-        48,
-        48
+    }
+  ],
+  "actor_colliders": {
+    "PLAYER": {
+      "offset": [
+        -28,
+        -36
       ],
-      "facing": "up"
-    },
-    {
-      "id": "SPAWN_FRONT_GROUP_A",
-      "type": "spawn",
-      "rect": [
-        600,
-        825,
-        48,
-        48
-      ],
-      "runtime_group": "front_gate"
-    },
-    {
-      "id": "SPAWN_FRONT_GROUP_B",
-      "type": "spawn",
-      "rect": [
-        1015,
-        825,
-        48,
-        48
-      ],
-      "runtime_group": "front_gate"
-    },
-    {
-      "id": "EXIT_BACK_ROUTE",
-      "type": "exit",
-      "rect": [
-        835,
-        0,
-        190,
-        72
-      ],
-      "destination": "rear_or_street_direction"
-    },
-    {
-      "id": "COL_GATE_CLOSED",
-      "type": "collision",
-      "rect": [
-        635,
-        665,
-        410,
-        190
+      "size": [
+        56,
+        36
       ]
     }
-  ]
+  },
+  "actor_visuals": {
+    "PLAYER": {
+      "display_height": 234.59885393775016,
+      "offset": [
+        -8.674861836894138,
+        0
+      ],
+      "position": [
+        445.32513816310586,
+        876
+      ]
+    },
+    "GATE_GUARD_A": {
+      "display_height": 156.0211743709761,
+      "offset": [
+        0,
+        0
+      ],
+      "position": [
+        805.7118927634988,
+        554.9787859277446
+      ]
+    },
+    "GATE_GUARD_B": {
+      "display_height": 160.11303177388407,
+      "offset": [
+        0,
+        0
+      ],
+      "position": [
+        968.1451910709172,
+        556.0017502784715
+      ]
+    },
+    "GROUP_LEADER": {
+      "display_height": 211.09356798010026,
+      "offset": [
+        0,
+        0
+      ],
+      "position": [
+        568.0622433699007,
+        875
+      ]
+    },
+    "ELDER_ESCORT": {
+      "display_height": 207.00171057719217,
+      "offset": [
+        0,
+        0
+      ],
+      "position": [
+        466.3327962929896,
+        875
+      ]
+    },
+    "FRONT_MEMBER_A": {
+      "display_height": 204.955781875738,
+      "offset": [
+        0,
+        0
+      ],
+      "position": [
+        699.4468945367958,
+        903.6430720620122
+      ]
+    },
+    "FRONT_MEMBER_B": {
+      "display_height": 195.21377708360328,
+      "offset": [
+        0,
+        0
+      ],
+      "position": [
+        954.0937099015969,
+        899.5512849007596
+      ]
+    },
+    "REAR_MEMBER": {
+      "display_height": 209.04763927864622,
+      "offset": [
+        0,
+        0
+      ],
+      "position": [
+        375.0239615038014,
+        875
+      ]
+    }
+  },
+  "player_motion": {
+    "movement_multiplier": 1,
+    "animation_multiplier": 1
+  }
 }
