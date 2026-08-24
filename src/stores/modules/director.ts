@@ -1091,6 +1091,11 @@ export const useDirectorStore = defineStore("director", () => {
 		} catch {
 			/* storage unavailable */
 		}
+		// 序章的风扇/录音/转场 Web Audio 不属于 Phaser SoundManager，
+		// 必须在第一章接管前一并清理，避免环境音尾巴混入下一场景。
+		ambience.stopRoom();
+		ambience.stopTape();
+		transitionAudio.stop();
 		stopPrologueBgm();
 		window.dispatchEvent(
 			new CustomEvent("prologue:scene-exit", {

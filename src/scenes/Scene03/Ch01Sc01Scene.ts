@@ -935,12 +935,19 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 	}
 
 	playFinaleVideo() {
-		this.stopBgm();
-		this.sound.stopAll();
+		// 章末视频保留第一章 BGM：只清理其他 Phaser 音效，不能调用
+		// stopBgm()/sound.stopAll()，否则会把本场唯一需要保留的 BGM 一并关掉。
+		const soundManager = this.sound as Phaser.Sound.BaseSoundManager;
+		for (const sound of soundManager.getAll()) {
+			if (sound !== this.bgm) sound.stop();
+		}
 		const video = this.add
 			.video(WORLD_W / 2, WORLD_H / 2, "ch01_finale")
 			.setDepth(3000);
 		this.videoOverlay = video;
+		// 仅第一章章末视频静音；其他章节视频继续使用各自文件中的原声。
+		video.setMute(true);
+		if (video.video) video.video.muted = true;
 		// 整幅展示：等纹理就绪后按视频原始分辨率等比例缩放，不拉伸变形
 		// （textureready 触发时 width 仍是构造默认 256，须先 setSizeToFrame 校正基准，
 		//   否则 scale 按 256 计算、视频被放大数倍只剩中间画面）

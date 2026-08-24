@@ -43,6 +43,13 @@ const bus = await source("src/common/audioBus.ts");
 assert(bus.includes("stopManagedBgms(scene.sound)"), "managed BGM creation must clear older managed BGM");
 assert(bus.includes("__redcodeAudioBus !== \"bgm\""), "audio bus must leave unmarked SFX untouched");
 
+const transitionAudio = await source("src/common/transitionAudio.ts");
+assert(transitionAudio.includes("scheduledTimers"), "transition one-shot audio must track delayed timers");
+assert(transitionAudio.includes("this.scheduledTimers.clear()"), "transition stop must clear delayed timers");
+
+const director = await source("src/stores/modules/director.ts");
+assert(director.includes("ambience.stopRoom();") && director.includes("ambience.stopTape();"), "prologue exit must clear Web Audio ambience");
+
 for (const path of managedScenes) {
 	const text = await source(path);
 	assert(text.includes("addManagedBgm("), `${path} uses the managed BGM bus`);

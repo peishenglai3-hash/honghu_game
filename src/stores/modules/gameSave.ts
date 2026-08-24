@@ -6,6 +6,7 @@
 import { ref } from "vue";
 import { defineStore } from "pinia";
 import { useGameStateStore } from "@/stores/modules/gameState";
+import { syncAchievements } from "@/common/achievementSystem";
 import { PROFILE_AXES, RISK_DIMENSIONS } from "@/common/actionProfileSystem";
 import {
 	MANUAL_SAVE_SLOTS,
@@ -328,6 +329,7 @@ export const useGameSaveStore = defineStore("gameSave", () => {
 		const tags = [...state.flags];
 		const fixed = tags.filter((t) => FIXED_TAGS.includes(t));
 		const save = buildSave("auto", sceneId, tags, fixed, { ...state.risk });
+		syncAchievements(tags, sceneId);
 		return setRedcodeAutoSave(save) ? save : null;
 	}
 

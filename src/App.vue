@@ -28,6 +28,7 @@ import FlavorToast from "@/components/ui/FlavorToast.vue";
 import EndPanel from "@/components/ui/EndPanel.vue";
 import PortraitResultPanel from "@/components/ui/PortraitResultPanel.vue";
 import CreditsRoll from "@/components/ui/CreditsRoll.vue";
+import AchievementToast from "@/components/ui/AchievementToast.vue";
 import ChapterTitleCard from "@/components/ui/ChapterTitleCard.vue";
 import CombatHud from "@/components/ui/CombatHud.vue";
 import DesktopKeyGuide from "@/components/ui/DesktopKeyGuide.vue";
@@ -138,6 +139,7 @@ onUnmounted(() => {
 	<EndPanel />
 	<PortraitResultPanel />
 	<CreditsRoll />
+	<AchievementToast />
 	<ChapterTitleCard />
 	<CombatHud />
 	<DesktopKeyGuide v-if="showDesktopKeyGuide" />

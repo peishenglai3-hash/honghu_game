@@ -27,7 +27,8 @@ const CHARACTER_ASSETS: Record<string, string> = {
 	ch04_crowd_young: "assets/ch02/actors/ch02_npc_young_member.png",
 	ch04_crowd_straw_hat: "assets/ch02/actors/ch02_npc_worker_straw_hat.png",
 	ch04_crowd_headcloth: "assets/ch02/actors/ch02_npc_worker_blue_headcloth.png",
-	ch04_crowd_guard: "assets/characters/ch03-militia/idle-a.png",
+	// 戏台场景只表现农会/自卫团一侧的人群；不在第四章生成团丁贴图。
+	ch04_street_team_member: "assets/ch02/actors/ch02_npc_worker_white_headcloth.png",
 };
 
 export function preloadCh04TempleCharacters(scene: Phaser.Scene): void {
@@ -160,8 +161,8 @@ export function setupCh04TempleActors(
 			role: "support",
 		},
 		{
-			id: "STREET_GUARD",
-			texture: "ch04_crowd_guard",
+			id: "STREET_TEAM_MEMBER",
+			texture: "ch04_street_team_member",
 			position: guard,
 			displayHeight: 118,
 			alpha: 0.9,

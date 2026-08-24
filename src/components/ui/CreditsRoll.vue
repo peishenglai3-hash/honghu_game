@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { assetPath } from "@/common/paths";
+import { getAchievementSnapshot } from "@/common/achievementSystem";
 import { useHudStore } from "@/stores/modules/hud";
 import { useDirectorStore } from "@/stores/modules/director";
 
 const hud = useHudStore();
 const director = useDirectorStore();
 const finished = ref(false);
-let finishTimer: number | undefined;
+const creditsRun = ref(0);
+const achievementSummary = ref(getAchievementSnapshot());
 
 const backgroundImage = assetPath("/assets/credits/honghu-thanks.png");
 
@@ -25,17 +27,6 @@ const CREDIT_BLOCKS = [
 	{ heading: "致敬", body: "献给在洪湖这片红色土地上奋斗过的每一位革命者\n愿他们的故事被更多人听见，被更多人记住" },
 ];
 
-function armCompletionTimer() {
-	if (finishTimer !== undefined) window.clearTimeout(finishTimer);
-	finished.value = false;
-	if (hud.creditsVisible) {
-		// 与 CSS 滚动时长保持一致；动画结束事件会先把按钮状态更新为完成。
-		finishTimer = window.setTimeout(() => {
-			finished.value = true;
-		}, 48000);
-	}
-}
-
 function finishCredits() {
 	hud.hideCredits();
 	director.goToTitle();
@@ -52,16 +43,23 @@ function onAnimationEnd() {
 	finished.value = true;
 }
 
-watch(() => hud.creditsVisible, armCompletionTimer);
+watch(
+	() => hud.creditsVisible,
+	(visible) => {
+		finished.value = false;
+		if (visible) {
+			creditsRun.value += 1;
+			achievementSummary.value = getAchievementSnapshot();
+		}
+	},
+);
 
 onMounted(() => {
 	window.addEventListener("keydown", onKeyDown, true);
-	armCompletionTimer();
 });
 
 onUnmounted(() => {
 	window.removeEventListener("keydown", onKeyDown, true);
-	if (finishTimer !== undefined) window.clearTimeout(finishTimer);
 });
 </script>
 
@@ -80,7 +78,7 @@ onUnmounted(() => {
 		></div>
 		<div class="credits-shade" aria-hidden="true"></div>
 		<div class="credits-viewport">
-			<div class="credits-content" @animationend="onAnimationEnd">
+			<div :key="creditsRun" class="credits-content" @animationend="onAnimationEnd">
 				<div class="credits-spacer" aria-hidden="true"></div>
 				<section v-for="block in CREDIT_BLOCKS" :key="block.heading" class="credit-block">
 					<h2>{{ block.heading }}</h2>
@@ -91,7 +89,7 @@ onUnmounted(() => {
 			</div>
 		</div>
 		<div class="credits-footer">
-			<span>{{ finished ? "致谢播放完毕" : "致谢滚动播放中" }} · Esc 返回初始界面</span>
+			<span>{{ finished ? "致谢播放完毕" : "致谢滚动播放中" }} · 成就记录 {{ achievementSummary.unlocked.length }}/{{ achievementSummary.total }} · Esc 返回初始界面</span>
 			<button type="button" @click="finishCredits">返回初始界面</button>
 		</div>
 	</div>
@@ -136,15 +134,21 @@ onUnmounted(() => {
 
 .credits-content {
 	position: absolute;
+	top: 0;
+	bottom: auto;
 	left: 50%;
 	width: min(780px, 88vw);
-	transform: translate(-50%, 100%);
+	/* 首段从画面下方边缘直接进入，避免点击后先空等一整屏。 */
+	transform: translate(-50%, 64vh);
 	text-align: center;
 	animation: credits-scroll 48s linear forwards;
+	animation-delay: 0s;
+	animation-play-state: running;
+	will-change: transform;
 }
 
 .credits-spacer {
-	height: 100vh;
+	height: 18vh;
 }
 
 .credits-spacer-end {
@@ -210,7 +214,7 @@ onUnmounted(() => {
 }
 
 @keyframes credits-scroll {
-	from { transform: translate(-50%, 100%); }
+	from { transform: translate(-50%, 64vh); }
 	to { transform: translate(-50%, -100%); }
 }
 

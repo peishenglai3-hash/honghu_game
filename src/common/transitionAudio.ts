@@ -5,7 +5,16 @@ export class TransitionAudioController {
 		string,
 		{ oscillator?: OscillatorNode; gain?: GainNode; timer?: number }
 	>();
+	private scheduledTimers = new Set<number>();
 	muted = false;
+
+	private schedule(callback: () => void, delay: number): void {
+		const timer = window.setTimeout(() => {
+			this.scheduledTimers.delete(timer);
+			callback();
+		}, delay);
+		this.scheduledTimers.add(timer);
+	}
 
 	prime() {
 		try {
@@ -196,8 +205,8 @@ export class TransitionAudioController {
 				this._tone(110, 0.65, 0.025, "sawtooth", 72);
 				break;
 			case "footsteps_light":
-				for (let i = 0; i < 4; i += 1)
-					window.setTimeout(
+				for (let i = 0; i < 4; i += 1) {
+					this.schedule(
 						() =>
 							this._tone(
 								72,
@@ -208,6 +217,7 @@ export class TransitionAudioController {
 							),
 						i * 430,
 					);
+				}
 				break;
 			case "car_engine":
 				this._tone(58, 1.9, 0.032, "sawtooth", 46);
@@ -215,7 +225,7 @@ export class TransitionAudioController {
 				break;
 			case "insects_recede":
 				this._ambientInsects();
-				window.setTimeout(
+				this.schedule(
 					() => this._fadeAmbient("insects", 1.8),
 					1500,
 				);
@@ -229,6 +239,8 @@ export class TransitionAudioController {
 	}
 
 	stop() {
+		for (const timer of this.scheduledTimers) window.clearTimeout(timer);
+		this.scheduledTimers.clear();
 		if (!this.context) return;
 		for (const [key, item] of this.ambient) {
 			if (item.timer) window.clearInterval(item.timer);

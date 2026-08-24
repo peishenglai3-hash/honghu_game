@@ -121,10 +121,13 @@ const credits = await page.evaluate(() => ({
 	visible: !!document.querySelector(".credits-roll"),
 	text: document.querySelector(".credits-roll")?.textContent ?? "",
 	background: document.querySelector(".credits-backdrop")?.getAttribute("style") ?? "",
+	firstHeadingTop: document.querySelector(".credit-block h2")?.getBoundingClientRect().top ?? Infinity,
 }));
 await page.screenshot({ path: `${output}ch04-credits-roll.png` });
 if (!credits.visible || !credits.text.includes("红色源代码：洪湖篇") || !credits.text.includes("致敬"))
 	throw new Error(`credits roll mismatch: ${JSON.stringify(credits)}`);
+if (credits.firstHeadingTop > 720)
+	throw new Error(`credits first heading is still delayed below the viewport: ${JSON.stringify(credits)}`);
 await page.keyboard.press("Escape");
 await waitFor(() => window.game.scene.isActive("TitleScene"), 8000);
 await waitFor(() => !document.querySelector(".portrait-result"), 4000);
