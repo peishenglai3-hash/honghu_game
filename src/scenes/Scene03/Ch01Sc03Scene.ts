@@ -183,6 +183,10 @@ export class Ch01Sc03Scene extends Phaser.Scene {
 			PLAYER: ensureActorVisualConfig(this.manifest as any, "PLAYER", PLAYER_DISPLAY_HEIGHT),
 			NPC_LIAISON: ensureActorVisualConfig(this.manifest as any, "NPC_LIAISON", LIAISON_DISPLAY_HEIGHT, this.actorSpawnPosition("NPC_LIAISON")),
 		};
+		// 玩家视觉对象必须跟随同一场景的物理锚点。旧版区域编辑器可能把
+		// PLAYER.position 写成绝对坐标；那只适用于静态 NPC，不能用于可移动玩家。
+		// 保留 offset 作为美术微调，但清除遗留的绝对 position，避免画面与碰撞体脱节。
+		delete this.actorVisualProfiles.PLAYER.position;
 		this.actorVisualEntries = [
 			createActorVisualEntry({
 				id: "PLAYER",
@@ -230,7 +234,9 @@ export class Ch01Sc03Scene extends Phaser.Scene {
 			? { x: this.player.x, y: this.player.y }
 			: this.actorSpawnPosition(id);
 		const offset = this.actorVisualProfiles[id]?.offset ?? [0, 0];
-		const position = this.actorVisualProfiles[id]?.position;
+		// PLAYER 是会移动的物理对象，不能读取可能残留的绝对 position；
+		// NPC_LIAISON 才允许使用编辑器保存的绝对落脚点。
+		const position = id === "PLAYER" ? null : this.actorVisualProfiles[id]?.position;
 		if (actor && anchor) actor.setPosition(position?.[0] ?? anchor.x + offset[0], position?.[1] ?? anchor.y + offset[1]);
 	}
 
