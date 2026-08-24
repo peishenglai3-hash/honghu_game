@@ -67,6 +67,19 @@ body {
 	pointer-events: none;
 }
 
+/*
+ * 移动端横屏采用 Phaser ENVELOP：容器占满可用视口，画面保持 16:9，
+ * 仅在极宽手机屏幕上裁掉少量上下黑边，避免玩家看到一个过小的中央画面。
+ * DOM HUD 同步使用视口容器，任务、对话和触控按钮不会被放大容器推到屏外。
+ */
+html[data-mobile-layout="cover"] #game,
+html[data-mobile-layout="cover"] #app {
+	width: 100vw;
+	height: 100vh;
+	max-width: none;
+	max-height: none;
+}
+
 .hidden {
 	display: none !important;
 }

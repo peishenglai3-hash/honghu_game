@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { useDirectorStore } from "@/stores/modules/director";
 import { useHudStore } from "@/stores/modules/hud";
 import {
 	PORTRAIT_AXIS_GUIDE,
@@ -9,7 +8,6 @@ import {
 } from "@/scenes/Scene06/ch04PortraitPresentation";
 
 const hud = useHudStore();
-const director = useDirectorStore();
 const returnButton = ref<HTMLButtonElement | null>(null);
 
 const axisRows = computed(() => {
@@ -48,21 +46,23 @@ function axisMarker(net: number): string {
 
 function returnToTitle() {
 	hud.hidePortraitResult();
-	director.goToTitle();
+	hud.showCredits();
 }
 
 function onKeyDown(event: KeyboardEvent) {
 	if (event.key !== "Escape" || !hud.portraitPanel) return;
 	event.preventDefault();
+	event.stopImmediatePropagation();
 	returnToTitle();
 }
 
 onMounted(() => {
-	window.addEventListener("keydown", onKeyDown);
+	// 捕获阶段先于 Phaser 场景级快捷键处理，避免 Esc 绕过致谢页。
+	window.addEventListener("keydown", onKeyDown, true);
 	window.setTimeout(() => returnButton.value?.focus(), 0);
 });
 
-onUnmounted(() => window.removeEventListener("keydown", onKeyDown));
+onUnmounted(() => window.removeEventListener("keydown", onKeyDown, true));
 </script>
 
 <template>
@@ -115,7 +115,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeyDown));
 				</p>
 
 				<button ref="returnButton" class="return-title" type="button" @click="returnToTitle">
-					按 Esc 返回初始界面
+					进入致谢滚动字幕
 				</button>
 			</section>
 		</div>

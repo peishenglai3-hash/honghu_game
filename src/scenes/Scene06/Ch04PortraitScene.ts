@@ -8,6 +8,7 @@ import {
 	hideInfoPanel,
 	hideItem,
 	hidePortraitResult,
+	hideCredits,
 	hidePrompt,
 	hideResult,
 	hideTask,
@@ -76,6 +77,7 @@ export class Ch04PortraitScene extends Phaser.Scene {
 		hideChoices();
 		hideResult();
 		hidePortraitResult();
+		hideCredits();
 		clearFade();
 	}
 

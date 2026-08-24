@@ -116,6 +116,16 @@ const save = await page.evaluate(() => JSON.parse(window.localStorage.getItem("r
 if (save?.sceneId !== "CH04_PORTRAIT_RESULT")
 	throw new Error(`chapter 4 portrait autosave missing: ${JSON.stringify(save)}`);
 await page.keyboard.press("Escape");
+await waitFor(() => !!document.querySelector(".credits-roll"), 5000);
+const credits = await page.evaluate(() => ({
+	visible: !!document.querySelector(".credits-roll"),
+	text: document.querySelector(".credits-roll")?.textContent ?? "",
+	background: document.querySelector(".credits-backdrop")?.getAttribute("style") ?? "",
+}));
+await page.screenshot({ path: `${output}ch04-credits-roll.png` });
+if (!credits.visible || !credits.text.includes("红色源代码：洪湖篇") || !credits.text.includes("致敬"))
+	throw new Error(`credits roll mismatch: ${JSON.stringify(credits)}`);
+await page.keyboard.press("Escape");
 await waitFor(() => window.game.scene.isActive("TitleScene"), 8000);
 await waitFor(() => !document.querySelector(".portrait-result"), 4000);
 if (errors.length) throw new Error(errors.join("\n"));
@@ -127,6 +137,7 @@ console.log(JSON.stringify({
 	firstResult,
 	transitionVideo,
 	portrait,
+	credits,
 	save: { sceneId: save?.sceneId, checkpoint: save?.checkpoint },
 	returnedToTitle: true,
 	screenshots: output,

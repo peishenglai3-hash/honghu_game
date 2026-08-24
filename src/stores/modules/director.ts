@@ -56,6 +56,7 @@ import {
 	hideChoices,
 	hideResult,
 	hidePortraitResult,
+	hideCredits,
 	showPrompt,
 	hideCombatHud,
 	clearFade,
@@ -64,6 +65,7 @@ import {
 import { useGameSaveStore, SCENE_KEY } from "@/stores";
 import { ambience } from "@/common/ambience";
 import { applyManagedBgmVolume } from "@/common/audioBus";
+import { isMobileDevice } from "@/common/device";
 
 const CHAPTER3_FAILURE_FLAGS = new Set([
 	"CH03_RISK_PRECHECK_FAILURE",
@@ -90,7 +92,7 @@ function createGame(parent: HTMLElement): Phaser.Game {
 			arcade: { gravity: { x: 0, y: 0 }, debug: false },
 		},
 		scale: {
-			mode: Phaser.Scale.FIT,
+		mode: isMobileDevice() ? Phaser.Scale.ENVELOP : Phaser.Scale.FIT,
 			autoCenter: Phaser.Scale.CENTER_BOTH,
 			width: 1280,
 			height: 720,
@@ -451,6 +453,7 @@ export const useDirectorStore = defineStore("director", () => {
 		hideChoices();
 		hideResult();
 		hidePortraitResult();
+		hideCredits();
 		hideInfoPanel();
 		hideCombatHud();
 		showPrompt("");

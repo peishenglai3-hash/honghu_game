@@ -74,12 +74,17 @@ const landscapeLayout = await page.evaluate(() => {
 		gameHeight: game?.getBoundingClientRect().height ?? 0,
 		canvasWidth: canvas?.getBoundingClientRect().width ?? 0,
 		canvasHeight: canvas?.getBoundingClientRect().height ?? 0,
+		canvasIntrinsicWidth: Number(canvas?.getAttribute("width") || 0),
+		canvasIntrinsicHeight: Number(canvas?.getAttribute("height") || 0),
 		tapSurface: !!document.querySelector(".mobile-tap-surface"),
 	};
 });
-const aspect = landscapeLayout.gameWidth / landscapeLayout.gameHeight;
-if (Math.abs(aspect - 16 / 9) > 0.02)
-	throw new Error(`mobile landscape aspect mismatch: ${JSON.stringify(landscapeLayout)}`);
+const viewportCoverage = landscapeLayout.gameWidth / landscapeLayout.innerWidth;
+const renderAspect = landscapeLayout.canvasIntrinsicWidth / landscapeLayout.canvasIntrinsicHeight;
+if (viewportCoverage < 0.98 || landscapeLayout.gameHeight < landscapeLayout.innerHeight * 0.98)
+	throw new Error(`mobile landscape viewport coverage mismatch: ${JSON.stringify(landscapeLayout)}`);
+if (Math.abs(renderAspect - 16 / 9) > 0.02)
+	throw new Error(`mobile render aspect mismatch: ${JSON.stringify(landscapeLayout)}`);
 await page.screenshot({ path: `${output}landscape-modern-return.png` });
 
 await tapAdvanceUntil(() => !!document.querySelector(".choice-panel"), 180);
