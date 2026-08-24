@@ -18,7 +18,11 @@ function onPointerDown(event: PointerEvent): void {
 		<img :src="hud.resultPanel.image" :alt="''" />
 		<div class="result-copy">
 			<span>{{ hud.resultPanel.pages ? hud.resultPanel.result[0] : `…${hud.resultPanel.result[0]}` }}</span>
-			<span v-if="hud.resultPanel.result[1]">{{ hud.resultPanel.result[1] }}</span>
+			<span
+				v-for="(line, index) in hud.resultPanel.result"
+				:key="`${index}-${line}`"
+				v-show="line"
+			>{{ line }}</span>
 			<small>{{ hud.resultPanel.hint || "空格 继续" }}</small>
 		</div>
 	</div>
@@ -54,6 +58,10 @@ function onPointerDown(event: PointerEvent): void {
 	font-size: clamp(1rem, 2vw, 1.65rem);
 	line-height: 1.7;
 	text-shadow: 0 2px 8px #000;
+}
+
+.result-copy span {
+	white-space: pre-line;
 }
 
 .result-copy small {

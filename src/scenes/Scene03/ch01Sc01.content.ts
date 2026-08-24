@@ -17,16 +17,35 @@ export interface Choice {
 }
 
 export const PROP_PATHS = {
-	PAPERWEIGHT: assetPath("/assets/ch01/sc01/props/PROP007_PaperweightPressPaper_Icon_v01.png"),
+	PAPERWEIGHT: assetPath(
+		"/assets/ch01/sc01/props/PROP007_PaperweightPressPaper_Icon_v01.png",
+	),
 	HAORI: assetPath("/assets/ch01/sc01/props/PROP018_HaoriFront_Icon_v01.png"),
-	INKSTONE: assetPath("/assets/ch01/sc01/props/PROP009_InkStone_AngledView_Icon_v01.png"),
-	PENHOLDER: assetPath("/assets/ch01/sc01/props/PROP010_PenHolder2_Icon_v01.png"),
-	INK_PEN: assetPath("/assets/ch01/sc01/props/PROP009_010_InkAndPen_Icon.png"),
-	BASIN: assetPath("/assets/ch01/sc01/props/PROP026_SmallWashStandAndCopperBasin_Icon_v01.png"),
-	BOOK: assetPath("/assets/ch01/sc01/props/PROP004_ThreadBoundBook_Icon_v01.png"),
+	INKSTONE: assetPath(
+		"/assets/ch01/sc01/props/PROP009_InkStone_AngledView_Icon_v01.png",
+	),
+	PENHOLDER: assetPath(
+		"/assets/ch01/sc01/props/PROP010_PenHolder2_Icon_v01.png",
+	),
+	INK_PEN: assetPath(
+		"/assets/ch01/sc01/props/PROP009_010_InkAndPen_Icon.png",
+	),
+	BASIN: assetPath(
+		"/assets/ch01/sc01/props/PROP026_SmallWashStandAndCopperBasin_Icon_v01.png",
+	),
+	BOOK: assetPath(
+		"/assets/ch01/sc01/props/PROP004_ThreadBoundBook_Icon_v01.png",
+	),
 	LAMP: assetPath("/assets/ch01/sc01/props/PROP016_Lantern_Icon_v01.png"),
-	BOWLS: assetPath("/assets/ch01/sc01/props/PROP029_SinglePorcelainBowl_Icon_v01.png"),
-	BOWLS_MULTI: assetPath("/assets/ch01/sc01/props/PROP028_MultiplePorcelainBowls_Icon_v01.png"),
+	BOWLS: assetPath(
+		"/assets/ch01/sc01/props/PROP029_SinglePorcelainBowl_Icon_v01.png",
+	),
+	BOWLS_MULTI: assetPath(
+		"/assets/ch01/sc01/props/PROP028_MultiplePorcelainBowls_Icon_v01.png",
+	),
+	SANDALS: assetPath(
+		"/assets/ch01/sc01/props/PROP031_Sandals_Icon_v01.png",
+	),
 };
 
 /** manifest 的 prop_icon 是短名（如 PROP016），实际图标文件名含完整描述名，短名拼不出真路径 */
@@ -38,6 +57,19 @@ export const PROP_ICON_FILES: Record<string, string> = {
 	PROP026: PROP_PATHS.BASIN,
 	PROP028: PROP_PATHS.BOWLS_MULTI,
 	PROP029: PROP_PATHS.BOWLS,
+	PROP031: PROP_PATHS.SANDALS,
+};
+
+/** 第一章场景一物品卡正文。这里使用剧本中的可见事实，不把内部 id 暴露给玩家。 */
+export const ITEM_TEXTS: Record<string, string> = {
+	ITM_LAMP_EXAMINE: "油灯的火苗很小，灯芯结着黑色的焦头。",
+	ITM_BOWL_LEFT: "桌上摆着一只粗瓷碗，碗沿留着日常使用的痕迹。",
+	ITM_BOWL_RIGHT: "另一只粗瓷碗放在桌边，灯影落在碗底。",
+	ITM_BOOK_EXAMINE: "书页边缘被翻得起毛，夹页里露出半张练字纸。",
+	ITM_INK_PAPER: "纸上有几行未写完的字，笔杆磨得光滑。",
+	ITM_BASIN_EXAMINE: "铜盆里的水没有完全静下来，盆上留着经年累月磨洗的痕迹。",
+	ITM_GOWN_EXAMINE: "门后的木钉上挂着一件外褂，衣摆沾着干泥，像是白天出过门。",
+	ITM_SANDALS_EXAMINE: "旁边还有一双草鞋，鞋底很薄，前端沾着一小点深色苔痕。",
 };
 
 export const INTRO_NARRATIVE: NarrativeEntry[] = [
@@ -48,6 +80,7 @@ export const INTRO_NARRATIVE: NarrativeEntry[] = [
 		speaker_name: "旁白",
 		text: "陈继南伏在旧木桌边。油灯的火苗很小，灯芯结着黑色的焦头。",
 		style: "narration",
+		presentation_group: "CH01_SC01_INTRO",
 		cps: 14,
 		pause_before_ms: 600,
 		advance: "manual",
@@ -59,6 +92,7 @@ export const INTRO_NARRATIVE: NarrativeEntry[] = [
 		speaker_name: "旁白",
 		text: "桌上摆着粗瓷碗、一册线装书、砚台和几张压在镇纸下的纸。",
 		style: "narration",
+		presentation_group: "CH01_SC01_INTRO",
 		cps: 14,
 		pause_before_ms: 300,
 		advance: "manual",
@@ -68,7 +102,7 @@ export const INTRO_NARRATIVE: NarrativeEntry[] = [
 		kind: "narration",
 		speaker_id: "NARRATOR",
 		speaker_name: "旁白",
-		text: "木门半掩着，门缝外是一片被夜色压低的院子。远处虫鸣不断，偶尔夹着一两声犬吠。",
+		text: "木门敞开着，门外是一片被夜色压低的院子。远处虫鸣不断，偶尔夹着一两声犬吠。",
 		style: "narration",
 		cps: 14,
 		pause_before_ms: 400,
@@ -97,11 +131,22 @@ export const INTRO_NARRATIVE: NarrativeEntry[] = [
 		advance: "manual",
 	},
 	{
+		entry_id: "CH01_N05",
+		kind: "narration",
+		speaker_id: "NARRATOR",
+		speaker_name: "旁白",
+		text: "笔记本、录音笔，和白天发生的种种，全像被人从手边抽走了。只剩下被压得发麻的双手，和一句不能轻易答错的话。",
+		style: "narration",
+		cps: 14,
+		pause_before_ms: 300,
+		advance: "manual",
+	},
+	{
 		entry_id: "CH01_T01",
 		kind: "thought",
 		speaker_id: "PLAYER",
 		speaker_name: "你",
-		text: "“她认识“我”。可我不认识她。”",
+		text: "“她认识‘我’。可我不认识她。”",
 		style: "thought",
 		cps: 18,
 		pause_before_ms: 400,
@@ -322,7 +367,7 @@ export const CHOICES: Choice[] = [
 		echo_summary: "我先把话题引到了门外。",
 		result: [
 			"女人顺着你的目光朝门外看了一眼。",
-			"“风声吧。哪家的门响一下，都像有人来了。”",
+			"“风声吧。哪家的门响一下，都像有人来了。”\n“方才外头好像有人走过，我没听清是不是来找你的。”",
 		],
 		profileDelta: { C: 2, A: 1 },
 		riskDelta: { identity: 0, execution: 0 },
@@ -337,7 +382,7 @@ export const CHOICES: Choice[] = [
 		echo_summary: "我问出了一个不该问的问题。",
 		result: [
 			"屋里安静了一瞬。女人的手停在半空，碗沿轻轻磕到桌面。",
-			"“你发什么热？你就是陈继南。”",
+			"“你发什么热？你就是陈继南。”\n“你是不是睡糊涂了？晚饭前还说今晚有事要出去，怎么一觉醒来，连自己是谁都记不得了？”",
 		],
 		profileDelta: { P: 1, C: 1 },
 		riskDelta: { identity: 2 },
@@ -352,7 +397,7 @@ export const CHOICES: Choice[] = [
 		echo_summary: "我给自己争到了一点喘息的时间。",
 		result: [
 			"女人起身去拿布巾，临走前将油灯拨亮了一点。",
-			"“你先坐稳。外头要是真有人来，我再叫你。”",
+			"“你先坐稳。外头要是真有人来，我再叫你。”\n她说得像是在照看一个不舒服的家人，并没有表现出知道门外会来谁。\n“这也许只是家人之间的体谅。她大概知道陈继南有些不愿说的事，陈继南也没主动告诉过她。”",
 		],
 		profileDelta: { C: 2, I: 1 },
 		riskDelta: { identity: 0 },
@@ -372,6 +417,7 @@ export const INK_NARRATIVE: NarrativeEntry[] = [
 		speaker_name: "旁白",
 		text: "你伸手碰到笔杆。指腹先感觉到木头上常年留下的细小凹痕。",
 		style: "narration",
+		presentation_group: "CH01_SC01_INK",
 		cps: 14,
 		pause_before_ms: 400,
 		advance: "manual",
@@ -383,6 +429,7 @@ export const INK_NARRATIVE: NarrativeEntry[] = [
 		speaker_name: "旁白",
 		text: "随后，砚台里尚未凝住的墨色像被一滴水搅开，慢慢漫过纸上的字。",
 		style: "narration",
+		presentation_group: "CH01_SC01_INK",
 		cps: 14,
 		pause_before_ms: 300,
 		advance: "manual",
@@ -407,7 +454,7 @@ export const TASKS_CH01_SC01 = {
 	},
 	observe: {
 		title: "完成三处固定观察",
-		detail: "铜盆、书案与姓名、门边衣物",
+		detail: "铜盆、书案与姓名、门边外褂与草鞋",
 	},
 	choice: {
 		title: "回应家人",
@@ -419,11 +466,11 @@ export const TASKS_CH01_SC01 = {
 	},
 	leave: {
 		title: "离开陈家",
-		detail: "推开半掩的木门，进入院子",
+		detail: "走到敞开的木门处，进入院子",
 	},
 	doorCode: {
 		title: "门外有人",
-		detail: "走到半掩的木门前，看看是谁在夜里叩门",
+		detail: "走到敞开的木门处，听取来人消息",
 	},
 	yard: {
 		title: "走到院墙下",

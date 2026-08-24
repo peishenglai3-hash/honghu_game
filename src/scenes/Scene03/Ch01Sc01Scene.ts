@@ -39,6 +39,7 @@ import {
 	TASKS_CH01_SC01,
 	PROP_PATHS,
 	PROP_ICON_FILES,
+	ITEM_TEXTS,
 } from "./ch01Sc01.content";
 import type { Choice } from "./ch01Sc01.content";
 import { applyFormalChoice } from "@/common/actionProfileSystem";
@@ -92,7 +93,8 @@ interface ManifestData {
 		id: string;
 		prompt?: string;
 		rect: [number, number, number, number];
-		type?: string;
+		 type?: string;
+		text_id?: string;
 		prop_icon?: string;
 		prompt_anchor?: [number, number];
 	}[];
@@ -137,6 +139,7 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 	videoOverlay?: Phaser.GameObjects.Video;
 	introVideoSkipReady = false;
 	bgm?: Phaser.Sound.BaseSound;
+	sandalsVisual?: Phaser.GameObjects.Image;
 
 	get state() {
 		return useGameStateStore().state;
@@ -165,6 +168,10 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 		this.load.image(
 			"ch01_sc01_bg",
 			"assets/ch01/sc01/map/ch01_sc01_base.png",
+		);
+		this.load.image(
+			"ch01_sc01_sandals",
+			"assets/ch01/sc01/props/PROP031_Sandals_Icon_v01.png",
 		);
 		this.load.video(
 			"ch01_sc01_intro",
@@ -196,6 +203,13 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 		this.setupActorCollider();
 		this.physics.world.setBounds(0, 0, WORLD_W, WORLD_H);
 		this.background = this.add.image(WORLD_W / 2, WORLD_H / 2, "ch01_sc01_bg").setDepth(-20);
+		// 原场景底图没有把门边草鞋画出来；补一层可见的场内物件，位置与剧本中的外褂相邻。
+		this.sandalsVisual = this.add
+			.image(1545, 520, "ch01_sc01_sandals")
+			.setOrigin(0.5, 1)
+			.setDisplaySize(104, 82)
+			.setAlpha(0.96)
+			.setDepth(actorDepth(520));
 		this.foregroundOcclusion = new ForegroundOcclusionRenderer(this, {
 			background: this.background,
 			getObjects: () => (this.manifest as any).foreground_occlusion?.objects ?? [],
@@ -619,6 +633,7 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 				prompt?: string;
 				rect: [number, number, number, number];
 				type?: string;
+				text_id?: string;
 				prop_icon?: string;
 		  }
 		| undefined {
@@ -629,6 +644,7 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 			prompt?: string;
 			rect: [number, number, number, number];
 			type?: string;
+			text_id?: string;
 			prop_icon?: string;
 		}[] = [];
 		// Dynamic event targets take precedence over static inspect targets
@@ -651,7 +667,7 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 		) {
 			targets.push({
 				id: "DOOR_CODE",
-				prompt: "推开木门",
+				prompt: "走近敞开的木门",
 				rect: [927.3, 49.9, 363.4, 396.2],
 				type: "event",
 			});
@@ -702,7 +718,9 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 			showItem({
 				icon,
 				title: target.prompt || "查看",
-				text: target.id,
+				text:
+					(target.text_id && ITEM_TEXTS[target.text_id]) ||
+					"这里没有更多可辨认的细节。",
 			});
 		}
 	}
@@ -895,7 +913,7 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 				detail: choice.detail,
 			})),
 			(id: string) => this.chooseQ4(id),
-			"怎样和家人告别？",
+			"怎样向家人告别？",
 		);
 	}
 

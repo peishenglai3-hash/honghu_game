@@ -130,42 +130,24 @@ export const HANDOFF_CHAIN: NarrativeEntry[] = [
 		speaker_name: "旁白",
 		text: "纸上的场景没有继续展开为审案结果。只有一段由身体残留而来的、断断续续的感受：",
 		style: "narration",
+		presentation_group: "CH01_SC02_HANDOFF_FEELING",
 		cps: 14,
-		advance: "manual",
-	},
-	{
-		entry_id: "FB01_P3",
-		kind: "narration",
-		speaker_name: "旁白",
-		text: "有人愿意收下状纸；有人终于把受的委屈讲清；几天后，渔民又来过一次，空着的手里多了一包用布裹好的干鱼。",
-		style: "narration",
-		cps: 14,
-		advance: "manual",
-	},
-	{
-		entry_id: "FB01_P4",
-		kind: "dialogue",
-		speaker_id: "NPC_FISHERMAN",
-		speaker_name: "渔民",
-		text: "我没别的东西。这个你收下。",
-		style: "dialogue",
-		cps: 16,
-		advance: "manual",
-	},
-	{
-		entry_id: "FB01_P5",
-		kind: "dialogue",
-		speaker_id: "NPC_CHEN_YOUNG",
-		speaker_name: "少年陈继南",
-		text: "留给家里。",
-		style: "dialogue",
-		cps: 16,
 		advance: "manual",
 	},
 ];
 
 // 几天后（墨水转场后，渔民切状态3）——干鱼与谢绝
 export const FISH_CHAIN: NarrativeEntry[] = [
+	{
+		entry_id: "FB01_FISH0",
+		kind: "narration",
+		speaker_name: "旁白",
+		text: "有人愿意收下状纸；有人终于把受的委屈讲清。几天后，渔民又来过一次，空着的手里多了一包用布裹好的干鱼。",
+		style: "narration",
+		presentation_group: "CH01_SC02_HANDOFF_FEELING",
+		cps: 14,
+		advance: "manual",
+	},
 	{
 		entry_id: "FB01_FISH1",
 		kind: "dialogue",

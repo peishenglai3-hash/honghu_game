@@ -270,9 +270,9 @@
       "type": "inspect",
       "rect": [
         1428.4375,
-        502.0625,
+        620,
         214.0625,
-        218.6875
+        100
       ],
       "prompt": "查看纸与笔",
       "prompt_anchor": [
@@ -323,35 +323,19 @@
       "id": "straw_sandals",
       "type": "inspect",
       "rect": [
-        23.25,
-        720.75,
-        325.5,
-        208.5
+        1440,
+        500,
+        220,
+        140
       ],
       "prompt": "查看草鞋",
       "prompt_anchor": [
-        192,
-        704
+        1545,
+        520
       ],
       "text_id": "ITM_SANDALS_EXAMINE",
-      "repeatable": true
-    },
-    {
-      "id": "half_door",
-      "type": "inspect",
-      "rect": [
-        1088.28125,
-        48.875,
-        363.4375,
-        396.25
-      ],
-      "prompt": "查看半掩木门",
-      "prompt_anchor": [
-        1344,
-        64
-      ],
-      "text_id": "ITM_DOOR_EXAMINE",
-      "repeatable": false
+      "repeatable": true,
+      "prop_icon": "PROP031"
     },
     {
       "id": "interaction_msspheo7",

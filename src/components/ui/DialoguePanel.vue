@@ -31,7 +31,11 @@ function onPointerDown(event: PointerEvent) {
 					v-if="hud.dialogue.avatarSrc"
 					:src="`${assetBase}assets/characters/${hud.dialogue.avatarSrc}/avatar.png`"
 					:alt="hud.dialogue.speaker"
-					:class="{ 'dialogue-avatar-pixel': !smoothAvatarIds.has(hud.dialogue.avatarSrc) }"
+					:class="{
+						'dialogue-avatar-pixel': !smoothAvatarIds.has(
+							hud.dialogue.avatarSrc,
+						),
+					}"
 				/>
 			</div>
 		</div>
@@ -126,6 +130,15 @@ function onPointerDown(event: PointerEvent) {
 	letter-spacing: 0.28em;
 }
 
+/* 旁白按剧本的“旁白栏 + 正文段落”呈现；对白仍保留原有底部署名。 */
+.dialogue-panel.narration .dialogue-speaker {
+	top: 50%;
+	bottom: auto;
+	height: auto;
+	transform: translateY(-50%);
+	letter-spacing: 0.12em;
+}
+
 .narration .dialogue-speaker {
 	color: #7a5c33;
 }
@@ -153,7 +166,14 @@ function onPointerDown(event: PointerEvent) {
 	line-height: 1.8;
 	letter-spacing: 0.04em;
 	text-align: justify;
+	white-space: pre-wrap;
 	text-shadow: 0 1px 0 #fff7;
+}
+
+.dialogue-panel.narration .dialogue-text {
+	color: #111;
+	text-align: center;
+	text-indent: 2em;
 }
 
 .dialogue-panel.dialogue .dialogue-text {

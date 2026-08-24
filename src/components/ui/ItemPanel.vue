@@ -14,7 +14,7 @@ function onClose() {
 			<strong>{{ hud.itemPanel.title }}</strong>
 			<span>{{ hud.itemPanel.text }}</span>
 		</div>
-		<button v-if="hud.itemPanel.closable" @click="onClose">
+		<button type="button" @click="onClose">
 			<kbd>E</kbd> 关闭
 		</button>
 	</div>
@@ -24,8 +24,9 @@ function onClose() {
 .item-panel {
 	position: absolute;
 	left: 18px;
-	top: 56px;
-	width: 164px;
+	top: clamp(98px, 18vh, 150px);
+	width: min(164px, 13vw);
+	min-width: 142px;
 	aspect-ratio: 1263 / 2028;
 	pointer-events: auto;
 	background: url("/assets/ui/keyed/item.png") center / 100% 100% no-repeat;
@@ -35,11 +36,12 @@ function onClose() {
 
 .item-panel img {
 	position: absolute;
-	left: 12%;
-	top: 12%;
-	width: 34%;
-	aspect-ratio: 1;
+	left: 10%;
+	top: 9%;
+	width: 80%;
+	height: 38%;
 	object-fit: contain;
+	object-position: center;
 }
 
 .item-panel div {
@@ -62,7 +64,7 @@ function onClose() {
 	margin-top: 0.3rem;
 	color: #3a3026;
 	line-height: 1.3;
-	font-size: 8px;
+	font-size: 7px;
 }
 
 .item-panel button {
@@ -81,23 +83,24 @@ function onClose() {
 kbd {
 	display: inline-grid;
 	place-items: center;
-	min-width: 20px;
-	height: 18px;
-	padding: 0 4px;
+	min-width: 16px;
+	height: 15px;
+	padding: 0 3px;
 	border: 1px solid #5a422a;
 	border-radius: 4px;
 	background: #f4e6c7;
 	color: #332316;
 	font:
-		700 12px/1 Georgia,
-		serif;
+		700 9px/1 "Noto Sans SC",
+		"Microsoft YaHei UI",
+		sans-serif;
 	box-shadow: inset 0 -1px #b79764;
 }
 
 @media (max-width: 850px) {
 	.item-panel {
 		left: 10px;
-		top: 48px;
+		top: 58px;
 		width: 140px;
 	}
 }

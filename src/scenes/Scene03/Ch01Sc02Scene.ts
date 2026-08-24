@@ -88,6 +88,7 @@ export class Ch01Sc02Scene extends Phaser.Scene {
 	collisionRects!: { id: string; rect: [number, number, number, number]; rotation: number }[];
 	observationMarks: Phaser.GameObjects.Text[] = [];
 	bgm?: Phaser.Sound.BaseSound;
+	flashbackDateCover?: Phaser.GameObjects.Rectangle;
 
 	get state() {
 		return useGameStateStore().state;
@@ -126,6 +127,12 @@ export class Ch01Sc02Scene extends Phaser.Scene {
 		this.setupActorCollider();
 		this.physics.world.setBounds(0, 0, WORLD_W, WORLD_H);
 		const bg = this.add.image(WORLD_W / 2, WORLD_H / 2, "ch01_sc02_bg").setDepth(-20);
+		// 闪回底图复用了中秋挂历，但本场是过去的回忆；只遮住可识别的
+		// “民国十六年”日期，不改动原图，也不影响其他章节的同一类素材。
+		this.flashbackDateCover = this.add
+			.rectangle(1064, 124, 112, 50, 0xe3c99c, 1)
+			.setStrokeStyle(1, 0x9a7047, 0.8)
+			.setDepth(-19);
 		this.buildCollision();
 
 		const playerSpawn = this.manifest.spawns.find((entry) => entry.id === "PLAYER_CHENJINNAN")!;

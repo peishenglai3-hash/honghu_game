@@ -80,5 +80,6 @@ export interface NarrativeEntry {
 	pause_before_ms?: number;
 	avatar_id?: string;
 	sfx?: string;
+	/** 连续同组文本作为一个自然段呈现，不改变原始 entry_id 内容锁。 */
+	presentation_group?: string;
 }
-

@@ -57,7 +57,16 @@ export const CH02_DEPLOYMENT_NARRATIVE: NarrativeEntry[] = [
 	{
 		entry_id: "CH02_DEPLOYMENT_MESSAGE_SPREAD",
 		kind: "narration",
-		text: "不久，正厅静默，传话的人疾步走出，低低的声音蔓延到院内，又迅速安静下来。\n煤油灯下的细节并没有传到每个人耳中。有人只听清了目标，有人只知道自己要跟随哪一组，还有人仍在等待本组负责人通知。但所有人都已知晓，今夜他们有个共同的敌人，他的名字是杜老三。",
+		speaker_name: "旁白",
+		text: "不久，正厅静默，传话的人疾步走出，低低的声音蔓延到院内，又迅速安静下来。煤油灯下的细节并没有传到每个人耳中。",
+		style: "narration",
+		cps: 11,
+	},
+	{
+		entry_id: "CH02_DEPLOYMENT_MESSAGE_SPREAD_FOLLOWUP",
+		kind: "narration",
+		speaker_name: "旁白",
+		text: "有人只听清了目标，有人只知道自己要跟随哪一组，还有人仍在等待本组负责人通知。但所有人都已知晓，今夜他们有个共同的敌人，他的名字是杜老三。",
 		style: "narration",
 		cps: 11,
 	},
