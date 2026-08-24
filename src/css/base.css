@@ -67,14 +67,6 @@ body {
 	pointer-events: none;
 }
 
-@media (max-width: 850px) {
-	#app {
-		width: 100vw;
-		height: 56.25vw;
-		max-height: 100vh;
-	}
-}
-
 .hidden {
 	display: none !important;
 }

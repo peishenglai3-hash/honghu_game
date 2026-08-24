@@ -18,6 +18,7 @@
 		"e2e:ch03": "node scripts/e2e-ch03-opening.mjs",
 		"e2e:ch04": "node scripts/e2e-ch04-opening.mjs",
 		"e2e:ch04:final": "node scripts/e2e-ch04-modern-final.mjs",
+		"e2e:mobile": "node scripts/e2e-mobile.mjs",
 		"e2e:ch03:risk": "node scripts/e2e-ch03-risk-branches.mjs",
 		"e2e:ch03:observation": "node scripts/e2e-ch03-observation.mjs",
 		"e2e:ch03:flashback3": "node scripts/e2e-ch03-flashback3.mjs",

@@ -135,6 +135,7 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 	}[];
 	observationMarks: Phaser.GameObjects.Text[] = [];
 	videoOverlay?: Phaser.GameObjects.Video;
+	introVideoSkipReady = false;
 	bgm?: Phaser.Sound.BaseSound;
 
 	get state() {
@@ -234,6 +235,10 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 		this.keyMap = createKeyMap(this);
 		onAction(this, "INTERACT", () => this.handleConfirm());
 		onAction(this, "ADVANCE", () => {
+			if (this.videoOverlay && this.state.mode === "intro" && this.introVideoSkipReady)
+				return this.skipIntroVideo();
+			if (this.videoOverlay && this.state.mode === "transition")
+				return this.skipFinaleVideo();
 			if (this.state.mode === "result") this.beginInkEvent();
 			else if (this.state.inNarrative) advanceNarrative();
 			else if (itemPanelOpen()) closeItem();
@@ -254,6 +259,7 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 		this.stopBgm();
 		this.state.mode = "intro";
 		this.state.playerLocked = true;
+		this.introVideoSkipReady = false;
 		this.videoOverlay = this.add
 			.video(WORLD_W / 2, WORLD_H / 2, "ch01_sc01_intro")
 			.setDepth(2000);
@@ -267,26 +273,22 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 			v.setDisplaySize(WORLD_W, WORLD_H);
 		});
 		this.videoOverlay.play();
-		this.videoOverlay.on("complete", () => {
-			this.state.flags.add(FLAGS.VIDEO_SEEN);
-			this.videoOverlay?.destroy();
-			this.videoOverlay = undefined;
-			this.startBgm();
-			this.startIntroNarrative();
-		});
+		this.videoOverlay.on("complete", () => this.skipIntroVideo());
 		// Fallback: allow skip with interact after 1s
 		this.time.delayedCall(1000, () => {
-			onAction(this, "INTERACT", () => {
-				if (this.videoOverlay) {
-					this.videoOverlay.stop();
-					this.videoOverlay.destroy();
-					this.videoOverlay = undefined;
-					this.state.flags.add(FLAGS.VIDEO_SEEN);
-					this.startBgm();
-					this.startIntroNarrative();
-				}
-			});
+			this.introVideoSkipReady = true;
 		});
+	}
+
+	skipIntroVideo() {
+		if (!this.videoOverlay) return;
+		this.introVideoSkipReady = false;
+		this.videoOverlay.stop();
+		this.videoOverlay.destroy();
+		this.videoOverlay = undefined;
+		this.state.flags.add(FLAGS.VIDEO_SEEN);
+		this.startBgm();
+		this.startIntroNarrative();
 	}
 
 	startIntroNarrative() {
@@ -534,6 +536,10 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 	}
 
 	handleConfirm() {
+		if (this.videoOverlay && this.state.mode === "intro" && this.introVideoSkipReady)
+			return this.skipIntroVideo();
+		if (this.videoOverlay && this.state.mode === "transition")
+			return this.skipFinaleVideo();
 		if (taskNeedsConfirmation()) return closeTask();
 		if (itemPanelOpen()) return closeItem();
 		if (this.nearby()) return this.interact();
@@ -1026,6 +1032,7 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 
 	shutdown() {
 		this.videoSkipCleanup?.();
+		this.introVideoSkipReady = false;
 		this.videoOverlay?.stop();
 		this.videoOverlay?.destroy();
 		this.videoOverlay = undefined;

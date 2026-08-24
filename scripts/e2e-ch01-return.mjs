@@ -85,12 +85,36 @@ console.log('4 yard scene entered');
 await sleep(800);
 await page.screenshot({ path: out + 'ret_02_yard.png' });
 
-// 外景：走近联络人 → 对话 → 完成回 SC01
-await page.evaluate(() => window.ch01Sc03Game.player.setPosition(1200, 470));
-await sleep(300);
-// First 'e': close any open task card; second 'e': interact with liaison
+// 回归：不能只用 setPosition() 验证场景切换，必须确认画面锚点、碰撞体和键盘移动仍同步。
+const yardSync = await page.evaluate(() => ({
+  physics: { x: window.ch01Sc03Game.player.x, y: window.ch01Sc03Game.player.y },
+  visual: { x: window.ch01Sc03Game.playerVisual.x, y: window.ch01Sc03Game.playerVisual.y },
+  mode: window.prologueState.mode,
+  locked: window.prologueState.playerLocked,
+}));
+console.log('4a yard player sync:', JSON.stringify(yardSync));
+if (Math.hypot(yardSync.visual.x - yardSync.physics.x, yardSync.visual.y - yardSync.physics.y) > 12)
+  fail('SC03 player visual and physics positions diverged after transition');
 await closeTask();
-await sleep(400);
+const beforeMove = await page.evaluate(() => ({ x: window.ch01Sc03Game.player.x, y: window.ch01Sc03Game.player.y }));
+await page.keyboard.down('d');
+await sleep(450);
+await page.keyboard.up('d');
+await sleep(150);
+const afterMove = await page.evaluate(() => ({ x: window.ch01Sc03Game.player.x, y: window.ch01Sc03Game.player.y }));
+console.log('4b yard movement:', JSON.stringify({ beforeMove, afterMove }));
+if (Math.hypot(afterMove.x - beforeMove.x, afterMove.y - beforeMove.y) < 20)
+  fail('SC03 player did not move after scene transition');
+
+// 外景：从 SC03 出生点实际走近联络人 → 对话 → 完成回 SC01
+await page.keyboard.down('d');
+await sleep(1750);
+await page.keyboard.up('d');
+await sleep(300);
+const yardNearby = await page.evaluate(() => window.ch01Sc03Game.nearby()?.id || 'none');
+console.log('4c yard interaction after walking:', yardNearby);
+if (yardNearby !== 'wall_shadow') fail('SC03 player could not reach the interaction area by walking');
+// E：在真实走到交互区后触发联络剧情
 await page.keyboard.press('e');
 await sleep(500);
 if (!(await advance(() => window.prologueState.flags.has('CH01_YARD_DONE'), 40))) fail('YARD_DONE not set');

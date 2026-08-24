@@ -1,10 +1,20 @@
 <script setup lang="ts">
 import { useHudStore } from "@/stores/modules/hud";
 const hud = useHudStore();
+
+function onPointerDown(event: PointerEvent): void {
+	if (!hud.resultPanelVisible || event.pointerType === "mouse") return;
+	event.preventDefault();
+	hud.advanceResult();
+}
 </script>
 
 <template>
-	<div v-if="hud.resultPanelVisible && hud.resultPanel" class="result-panel">
+	<div
+		v-if="hud.resultPanelVisible && hud.resultPanel"
+		class="result-panel"
+		@pointerdown="onPointerDown"
+	>
 		<img :src="hud.resultPanel.image" :alt="''" />
 		<div class="result-copy">
 			<span>{{ hud.resultPanel.pages ? hud.resultPanel.result[0] : `…${hud.resultPanel.result[0]}` }}</span>

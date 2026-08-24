@@ -13,6 +13,7 @@ const hud = useHudStore();
 const mobile = ref(isMobileDevice());
 const pressed = new Set<string>();
 let stopWatchingDevice = () => {};
+let clickSuppressTimer: number | undefined;
 
 const shouldShow = computed(() =>
 	Boolean(
@@ -25,6 +26,16 @@ const shouldShow = computed(() =>
 		!hud.resultPanelVisible &&
 		!hud.infoPanel &&
 		!hud.endPanel,
+	),
+);
+
+// 对话和视频过渡没有稳定的 DOM 按钮，移动端允许点击画面任意位置推进。
+// 选择、照片结果、信息卡和任务卡打开时关闭该层，避免误触或挡住原有控件。
+const showTapAdvance = computed(() =>
+	Boolean(
+		shouldShow.value &&
+		hud.taskCards.length === 0 &&
+		!hud.itemPanel,
 	),
 );
 
@@ -41,9 +52,28 @@ function release(action: string, event?: PointerEvent): void {
 	setVirtualAction(action, false);
 }
 
-function tap(action: string, event: PointerEvent): void {
+function tap(action: string, event: PointerEvent, suppressClick = false): void {
 	event.preventDefault();
+	event.stopPropagation();
 	triggerVirtualAction(action);
+	if (suppressClick) suppressNextClick();
+}
+
+function suppressNextClick(): void {
+	if (typeof window === "undefined") return;
+	if (clickSuppressTimer !== undefined) window.clearTimeout(clickSuppressTimer);
+	const prevent = (event: MouseEvent) => {
+		event.preventDefault();
+		event.stopPropagation();
+		window.removeEventListener("click", prevent, true);
+		if (clickSuppressTimer !== undefined) window.clearTimeout(clickSuppressTimer);
+		clickSuppressTimer = undefined;
+	};
+	window.addEventListener("click", prevent, true);
+	clickSuppressTimer = window.setTimeout(() => {
+		window.removeEventListener("click", prevent, true);
+		clickSuppressTimer = undefined;
+	}, 700);
 }
 
 function releaseAll(): void {
@@ -67,12 +97,19 @@ onUnmounted(() => {
 	stopWatchingDevice();
 	window.removeEventListener("pointerup", releaseAll);
 	window.removeEventListener("pointercancel", releaseAll);
+	if (clickSuppressTimer !== undefined) window.clearTimeout(clickSuppressTimer);
 	releaseAll();
 });
 </script>
 
 <template>
 	<div v-if="shouldShow" class="mobile-controls" aria-label="触屏操作">
+		<div
+			v-if="showTapAdvance"
+			class="mobile-tap-surface"
+			aria-label="点击画面推进"
+			@pointerdown="tap('ADVANCE', $event, true)"
+		></div>
 		<div class="mobile-dpad" aria-label="方向键">
 			<button
 				class="dpad-button dpad-up"
@@ -128,7 +165,10 @@ onUnmounted(() => {
 	display: flex;
 	align-items: flex-end;
 	justify-content: space-between;
-	padding: 0 max(14px, env(safe-area-inset-left)) max(14px, env(safe-area-inset-bottom));
+	padding-top: max(0px, env(safe-area-inset-top));
+	padding-right: max(14px, env(safe-area-inset-right));
+	padding-bottom: max(14px, env(safe-area-inset-bottom));
+	padding-left: max(14px, env(safe-area-inset-left));
 	pointer-events: none;
 	z-index: 31;
 	user-select: none;
@@ -139,6 +179,16 @@ onUnmounted(() => {
 	display: grid;
 	gap: 6px;
 	pointer-events: auto;
+	position: relative;
+	z-index: 2;
+}
+
+.mobile-tap-surface {
+	position: absolute;
+	inset: 0;
+	pointer-events: auto;
+	z-index: 1;
+	touch-action: manipulation;
 }
 
 .mobile-dpad {

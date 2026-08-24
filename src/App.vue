@@ -31,6 +31,7 @@ import ChapterTitleCard from "@/components/ui/ChapterTitleCard.vue";
 import CombatHud from "@/components/ui/CombatHud.vue";
 import DesktopKeyGuide from "@/components/ui/DesktopKeyGuide.vue";
 import MobileControls from "@/components/ui/MobileControls.vue";
+import MobileOrientationGate from "@/components/ui/MobileOrientationGate.vue";
 import { useGameStateStore } from "@/stores/modules/gameState";
 import { useGameSaveStore } from "@/stores";
 import { isMobileDevice, watchDeviceChange } from "@/common/device";
@@ -130,4 +131,5 @@ onUnmounted(() => {
 	<CombatHud />
 	<DesktopKeyGuide v-if="showDesktopKeyGuide" />
 	<MobileControls :enabled="gameStarted" />
+	<MobileOrientationGate />
 </template>
