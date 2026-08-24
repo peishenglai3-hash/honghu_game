@@ -65,6 +65,8 @@ export function showEndPanel(save: any, endMeta?: any) { store().showEndPanel(sa
 export function hideEndPanel() { store().hideEndPanel(); }
 export function showPortraitResult(data: PortraitPanelData) { store().showPortraitResult(data); }
 export function hidePortraitResult() { store().hidePortraitResult(); }
+export function showCredits() { store().showCredits(); }
+export function hideCredits() { store().hideCredits(); }
 export function showCombatHud(data: any = {}) { store().showCombatHud(data); }
 export function updateCombatHud(data: any) { store().updateCombatHud(data); }
 export function hideCombatHud() { store().hideCombatHud(); }

@@ -27,6 +27,7 @@ import PausePanel from "@/components/ui/PausePanel.vue";
 import FlavorToast from "@/components/ui/FlavorToast.vue";
 import EndPanel from "@/components/ui/EndPanel.vue";
 import PortraitResultPanel from "@/components/ui/PortraitResultPanel.vue";
+import CreditsRoll from "@/components/ui/CreditsRoll.vue";
 import ChapterTitleCard from "@/components/ui/ChapterTitleCard.vue";
 import CombatHud from "@/components/ui/CombatHud.vue";
 import DesktopKeyGuide from "@/components/ui/DesktopKeyGuide.vue";
@@ -48,13 +49,21 @@ const gameStarted = ref(
 const prologueKeyGuide = ref(false);
 let stopWatchingDevice = () => {};
 
+function applyMobileLayout(isMobile: boolean) {
+	if (typeof document === "undefined") return;
+	if (isMobile) document.documentElement.dataset.mobileLayout = "cover";
+	else delete document.documentElement.dataset.mobileLayout;
+}
+
 const showDesktopKeyGuide = computed(() =>
 	gameStarted.value && prologueKeyGuide.value && !mobile.value && !hud.overlay,
 );
 
 onMounted(() => {
+	applyMobileLayout(mobile.value);
 	stopWatchingDevice = watchDeviceChange(() => {
 		mobile.value = isMobileDevice();
+		applyMobileLayout(mobile.value);
 	});
 	const initialScene = gameSave.getCurrentSceneId();
 	const directEntry = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("chapter");
@@ -104,6 +113,7 @@ function onDone() {
 
 onUnmounted(() => {
 	stopWatchingDevice();
+	if (typeof document !== "undefined") delete document.documentElement.dataset.mobileLayout;
 	(window as any).__honghuAppCleanup?.();
 });
 </script>
@@ -127,6 +137,7 @@ onUnmounted(() => {
 	<FlavorToast />
 	<EndPanel />
 	<PortraitResultPanel />
+	<CreditsRoll />
 	<ChapterTitleCard />
 	<CombatHud />
 	<DesktopKeyGuide v-if="showDesktopKeyGuide" />

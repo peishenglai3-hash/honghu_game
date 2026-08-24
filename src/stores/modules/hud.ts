@@ -262,6 +262,9 @@ export const useHudStore = defineStore("hud", () => {
   // --- final portrait result (independent from chapter-complete dialog) ---
   const portraitPanel = ref<PortraitPanelData | null>(null);
 
+  // --- 通关致谢滚动字幕（与画像结算分离，沿用画像场景 BGM） ---
+  const creditsVisible = ref(false);
+
   // --- transition overlay ---
   const transition = reactive({
     active: false,
@@ -653,6 +656,17 @@ export const useHudStore = defineStore("hud", () => {
     portraitPanel.value = null;
   }
 
+  function showCredits() {
+    creditsVisible.value = true;
+    playerLocked.value = true;
+    gameState.state.playerLocked = true;
+    gameState.state.mode = "end";
+  }
+
+  function hideCredits() {
+    creditsVisible.value = false;
+  }
+
   function showCombatHud(data: Partial<CombatHudData> = {}) {
     Object.assign(combatHud, data, { visible: true });
   }
@@ -687,6 +701,7 @@ export const useHudStore = defineStore("hud", () => {
     flavorToast,
     endPanel,
     portraitPanel,
+    creditsVisible,
     transition,
     combatHud,
     playerLocked,
@@ -730,6 +745,8 @@ export const useHudStore = defineStore("hud", () => {
     hideEndPanel,
     showPortraitResult,
     hidePortraitResult,
+    showCredits,
+    hideCredits,
     showCombatHud,
     updateCombatHud,
     hideCombatHud,
