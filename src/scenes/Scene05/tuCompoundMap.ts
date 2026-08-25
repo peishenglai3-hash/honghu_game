@@ -54,7 +54,7 @@ export const TU_COMPOUND_STATE_CATALOG: Record<
 	},
 	STATE_DEPARTURE: {
 		label: "分批离场",
-		storyUse: "清点结束、玩家所在小组重新集合并前往王爷庙",
+		storyUse: "清点结束、你所在小组重新集合并前往王爷庙",
 	},
 };
 

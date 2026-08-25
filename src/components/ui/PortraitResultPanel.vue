@@ -79,7 +79,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeyDown, true));
 			<section class="portrait-copy">
 				<div class="system-note">
 					<strong>第四章理解倾向已记录。</strong>
-					<span>本章选择不会改变历史结局，只影响玩家画像。</span>
+					<span>本章选择不会改变历史结局，只影响你的最终画像。</span>
 				</div>
 
 				<div class="section-label">根据全章累计结果，进入最终画像结算</div>
@@ -128,23 +128,25 @@ onUnmounted(() => window.removeEventListener("keydown", onKeyDown, true));
 	inset: 0;
 	display: grid;
 	place-items: center;
-	padding: clamp(12px, 2.5vw, 30px);
+	padding: clamp(8px, 1.4vw, 22px);
 	background:
 		radial-gradient(circle at 18% 12%, #463a2a55, transparent 38%),
 		#0b0d0d;
 	color: #eee4cf;
 	pointer-events: auto;
+	overflow: auto;
 	z-index: 60;
 }
 
 .portrait-shell {
 	display: grid;
-	grid-template-columns: minmax(360px, 1.13fr) minmax(360px, 0.87fr);
-	gap: clamp(18px, 3vw, 42px);
-	width: min(1180px, 96vw);
-	height: min(670px, 94vh);
+	grid-template-columns: minmax(0, 1.24fr) minmax(360px, 0.76fr);
+	gap: clamp(14px, 2vw, 30px);
+	width: min(1500px, calc(100vw - 24px));
+	height: min(860px, calc(100vh - 24px));
 	min-height: 0;
-	padding: clamp(18px, 2.4vw, 34px);
+	box-sizing: border-box;
+	padding: clamp(14px, 2vw, 28px);
 	border: 1px solid #a88d5e;
 	background: linear-gradient(135deg, #181716f5, #111313f5);
 	box-shadow: 0 24px 70px #000b;
