@@ -133,7 +133,7 @@ export const CH02_DISCIPLINE_NARRATIVE: NarrativeEntry[] = [
 	{
 		entry_id: "CH02_DISCIPLINE_DELEGATE",
 		kind: "narration",
-		text: "刘绍南退回正厅内侧。几名负责人随即分头向院内、院门外和附近暗处传达安排。",
+		text: "戴安南退回正厅内侧。几名负责人随即分头向院内、院门外和附近暗处传达安排。",
 		style: "narration",
 		cps: 11,
 	},
@@ -153,7 +153,7 @@ export const CH02_GROUP_LEADER_INTRO: NarrativeEntry[] = [
 export const CH02_GROUP_ASSIGNMENT_INFO = [
 	"【已知信息】",
 	"今夜将按照部署分组行动；",
-	"刘绍南负责统一安排；",
+	"戴安南负责统一安排；",
 	"行动首先针对杜老三；",
 	"你被分入普通行动小组；",
 	"你不能取代真实历史人物完成关键行动。",

@@ -510,7 +510,8 @@ export class Ch03TuCompoundScene extends Phaser.Scene {
 					{ id: "GROUP_LEADER", texture: "ch02_npc_group_leader", position: [720, 540], displayHeight: 220 },
 					{ id: "DONG_YUNTING", texture: "ch03_dong_yunting_after_battle", position: [935, 540], displayHeight: 210 },
 					{ id: "WOUNDED_MEMBER", texture: "ch03_wounded_member", position: [505, 570], displayHeight: 190, alpha: 0.92 },
-					{ id: "CAPTURED_CONFIDANT", texture: "ch03_militia_guard_b", position: [1220, 610], displayHeight: 205, alpha: 0.74 },
+					// 战后画面不再使用团丁贴图；此处改为戴安南，保持历史行动队伍的视觉连续性。
+					{ id: "DAI_ANNAN_AFTER_BATTLE", texture: "ch02_npc_dai_annan", position: [1220, 610], displayHeight: 220, alpha: 0.92 },
 					{ id: "FRONT_MEMBER_A", texture: "ch02_npc_young_member", position: [890, 760], displayHeight: 220 },
 				]
 			: [

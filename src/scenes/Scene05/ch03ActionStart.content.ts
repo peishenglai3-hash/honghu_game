@@ -177,13 +177,13 @@ export const CH03_ACTION_INTRO: NarrativeEntry[] = [
 		"CH03_ACTION_START_STREET_SHOUT_01",
 		"dialogue",
 		"围住了！",
-		"场外声音｜街面方向",
+		"街面方向",
 	),
 	entry(
 		"CH03_ACTION_START_STREET_SHOUT_02",
 		"dialogue",
 		"不要让他们报信！",
-		"场外声音｜街面方向",
+		"街面方向",
 	),
 	entry(
 		"CH03_ACTION_START_BURST_02",
@@ -204,7 +204,7 @@ export const CH03_ACTION_INTRO: NarrativeEntry[] = [
 		"CH03_ACTION_START_MILITIA_CALL",
 		"dialogue",
 		"街上来了多少人？",
-		"场外声音｜院内团丁",
+		"院内团丁",
 	),
 	entry("CH03_ACTION_START_NO_REPLY", "narration", "没有人回答。"),
 	entry(

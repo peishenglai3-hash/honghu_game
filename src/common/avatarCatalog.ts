@@ -27,9 +27,8 @@ const DEFAULT_AVATAR_BY_SPEAKER: Record<string, string> = {
 	传话队员: "ch02-worker",
 	团丁: "ch03-militia",
 	院内团丁: "ch03-militia",
-	"场外声音｜街面方向": "ch03-militia",
-	"场外声音｜院内": "ch03-militia",
-	"场外声音｜院内团丁": "ch03-militia",
+	街面方向: "ch03-militia",
+	院内: "ch03-militia",
 };
 
 export function defaultAvatarForSpeaker(speaker = ""): string {

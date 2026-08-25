@@ -229,7 +229,7 @@ export const CH03_FIRE_SYNC_INTRO: NarrativeEntry[] = [
 		"narration",
 		"大院侧边升起一股烟。起初只有薄薄一层，随后火光从榨房方向映到院墙上。墙内的人影来回跑动，原本守在正门附近的团丁也开始向侧院退去。",
 	),
-	entry("CH03_FIRE_SYNC_SHOUT", "dialogue", "榨房着了！", "场外声音｜院内"),
+	entry("CH03_FIRE_SYNC_SHOUT", "dialogue", "榨房着了！", "院内"),
 	entry(
 		"CH03_FIRE_SYNC_CHAOS",
 		"narration",

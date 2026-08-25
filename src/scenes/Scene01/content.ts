@@ -328,7 +328,7 @@ export const CHOICES: Choice[] = [
 		flag: "FLAG_PRO_PHOTO_TAKEN",
 		echo_summary: "拍下纪念碑的时候，周围安静得能听见风。",
 		result: [
-			"刘绍南，刘绍南……",
+			"戴安南，戴安南……",
 			"十八岁的你，二十五岁的你，会是什么模样？",
 		],
 		profileDelta: { C: 1, A: 2 },
@@ -336,7 +336,7 @@ export const CHOICES: Choice[] = [
 	},
 	{
 		id: "PRO_Q01_C",
-		label: "向同学确认采访中是否提到刘绍南",
+		label: "向同学确认采访中是否提到戴安南",
 		detail: "通过他人记录和团队材料补全信息",
 		image: assetPath("/assets/choices/c.png"),
 		flag: "FLAG_PRO_TEAM_RECORD_FOUND",
@@ -350,7 +350,7 @@ export const CHOICES: Choice[] = [
 	},
 	{
 		id: "PRO_Q01_D",
-		label: '在实践笔记上写下"刘绍南"',
+		label: '在实践笔记上写下"戴安南"',
 		detail: "主动留下问题，并继续追索这个名字",
 		image: assetPath("/assets/choices/d.png"),
 		flag: "FLAG_PRO_NAME_WRITTEN",
