@@ -48,6 +48,47 @@ async function tapAdvanceUntil(predicate, limit = 180) {
 	await waitFor(predicate, 1000);
 }
 
+// 首屏回归：方向锁定被浏览器拒绝时，玩家仍能用触屏进入游戏。
+await page.goto(`${base}/`, { waitUntil: "networkidle" });
+await waitFor(() => !!window.titleScene);
+await waitFor(() => !!document.querySelector(".mobile-orientation-gate"));
+const portraitTitleBeforeOverride = await page.evaluate(() => {
+	const canvas = document.querySelector("#game canvas");
+	return {
+		gate: !!document.querySelector(".mobile-orientation-gate"),
+		canvas: canvas?.getBoundingClientRect().toJSON(),
+	};
+});
+await page.locator(".mobile-orientation-actions .secondary").tap();
+await waitFor(() => !document.querySelector(".mobile-orientation-gate"));
+const portraitTitleAfterOverride = await page.evaluate(() => {
+	const canvas = document.querySelector("#game canvas");
+	return {
+		canvas: canvas?.getBoundingClientRect().toJSON(),
+		titleScene: !!window.titleScene,
+		settingsOpen: !!document.querySelector(".title-settings-panel"),
+	};
+});
+const titleCanvas = page.locator("#game canvas");
+const titleCanvasBox = await titleCanvas.boundingBox();
+if (
+	!titleCanvasBox ||
+	portraitTitleAfterOverride.canvas.width > 391 ||
+	portraitTitleAfterOverride.canvas.height > 221 ||
+	portraitTitleAfterOverride.settingsOpen
+)
+	throw new Error(`portrait title fit mismatch: ${JSON.stringify(portraitTitleAfterOverride)}`);
+await titleCanvas.click({
+	position: {
+		x: (301 / 1280) * titleCanvasBox.width,
+		y: (641 / 720) * titleCanvasBox.height,
+	},
+	force: true,
+});
+await waitFor(() => !!document.querySelector(".intro-panel"));
+const titleEntry = { portraitTitleBeforeOverride, portraitTitleAfterOverride };
+
+// 后续场景回归在横屏视口中进行。
 await page.goto(`${base}/?chapter=4&ch4scene=modern-return`, { waitUntil: "networkidle" });
 await waitFor(() => !!window.gameDirector && !!window.ch04ModernReturnGame);
 await waitFor(() => !!document.querySelector(".mobile-orientation-gate"));
@@ -79,10 +120,17 @@ const landscapeLayout = await page.evaluate(() => {
 		tapSurface: !!document.querySelector(".mobile-tap-surface"),
 	};
 });
-const viewportCoverage = landscapeLayout.gameWidth / landscapeLayout.innerWidth;
+const expectedCanvasWidth = Math.min(
+	landscapeLayout.innerWidth,
+	landscapeLayout.innerHeight * (16 / 9),
+);
+const expectedCanvasHeight = expectedCanvasWidth * (9 / 16);
 const renderAspect = landscapeLayout.canvasIntrinsicWidth / landscapeLayout.canvasIntrinsicHeight;
-if (viewportCoverage < 0.98 || landscapeLayout.gameHeight < landscapeLayout.innerHeight * 0.98)
-	throw new Error(`mobile landscape viewport coverage mismatch: ${JSON.stringify(landscapeLayout)}`);
+if (
+	Math.abs(landscapeLayout.canvasWidth - expectedCanvasWidth) > 2 ||
+	Math.abs(landscapeLayout.canvasHeight - expectedCanvasHeight) > 2
+)
+	throw new Error(`mobile landscape fit mismatch: ${JSON.stringify(landscapeLayout)}`);
 if (Math.abs(renderAspect - 16 / 9) > 0.02)
 	throw new Error(`mobile render aspect mismatch: ${JSON.stringify(landscapeLayout)}`);
 await page.screenshot({ path: `${output}landscape-modern-return.png` });
@@ -107,6 +155,7 @@ await page.screenshot({ path: `${output}result-touch-advanced.png` });
 if (errors.length) throw new Error(errors.join("\n"));
 console.log(JSON.stringify({
 	status: "MOBILE ORIENTATION + TOUCH RESULT E2E PASS",
+	titleEntry,
 	portraitGate,
 	landscapeLayout,
 	resultImages: { firstImage, secondImage },

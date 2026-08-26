@@ -41,8 +41,10 @@ export function watchDeviceChange(listener: () => void): () => void {
 	if (typeof window === "undefined") return () => {};
 	window.addEventListener("resize", listener, { passive: true });
 	window.addEventListener("orientationchange", listener, { passive: true });
+	window.visualViewport?.addEventListener("resize", listener, { passive: true });
 	return () => {
 		window.removeEventListener("resize", listener);
 		window.removeEventListener("orientationchange", listener);
+		window.visualViewport?.removeEventListener("resize", listener);
 	};
 }

@@ -65,7 +65,6 @@ import {
 import { useGameSaveStore, SCENE_KEY } from "@/stores";
 import { ambience } from "@/common/ambience";
 import { applyManagedBgmVolume } from "@/common/audioBus";
-import { isMobileDevice } from "@/common/device";
 
 const CHAPTER3_FAILURE_FLAGS = new Set([
 	"CH03_RISK_PRECHECK_FAILURE",
@@ -92,7 +91,9 @@ function createGame(parent: HTMLElement): Phaser.Game {
 			arcade: { gravity: { x: 0, y: 0 }, debug: false },
 		},
 		scale: {
-		mode: isMobileDevice() ? Phaser.Scale.ENVELOP : Phaser.Scale.FIT,
+			// FIT 保留完整的 16:9 游戏画面。移动端若使用 ENVELOP，
+			// 竖屏会裁掉横向菜单，横屏也可能裁掉底部按钮。
+			mode: Phaser.Scale.FIT,
 			autoCenter: Phaser.Scale.CENTER_BOTH,
 			width: 1280,
 			height: 720,

@@ -5,6 +5,7 @@ import { useGameStateStore } from "@/stores/modules/gameState";
 import { assetPath } from "@/common/paths";
 import { showFlavor } from "@/common/ui";
 import { useGameSaveStore } from "@/stores";
+import { isMobileDevice } from "@/common/device";
 
 // 游戏初始界面：设计图全屏 + 四个烧录木牌按钮的透明热区（悬停微光）
 const HOTSPOTS = [
@@ -34,9 +35,10 @@ export class TitleScene extends Phaser.Scene {
 		// 设计图为 2000×1125，等比缩放铺满 1280×720 画布（热区坐标按此比例标定）
 		this.add.image(640, 360, "title_bg").setDisplaySize(1280, 720);
 
+		const touchHotspotHeight = isMobileDevice() ? 150 : undefined;
 		for (const spot of HOTSPOTS) {
 			const zone = this.add
-				.rectangle(spot.x, spot.y, spot.w, spot.h, 0xffffff, 0)
+				.rectangle(spot.x, spot.y, spot.w, touchHotspotHeight ?? spot.h, 0xffffff, 0)
 				.setInteractive();
 			zone.on("pointerover", () => {
 				this.tweens.add({
@@ -49,6 +51,9 @@ export class TitleScene extends Phaser.Scene {
 				this.tweens.add({ targets: zone, fillAlpha: 0, duration: 120 });
 			});
 			zone.on("pointerdown", () => {
+				// Phaser 可能在 DOM 方向遮罩上仍收到全局指针坐标；
+				// 遮罩可见时忽略画布热区，避免退路按钮误打开菜单项。
+				if (document.querySelector(".mobile-orientation-gate")) return;
 				this.handleAction(spot.id);
 			});
 		}

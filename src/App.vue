@@ -52,8 +52,12 @@ let stopWatchingDevice = () => {};
 
 function applyMobileLayout(isMobile: boolean) {
 	if (typeof document === "undefined") return;
-	if (isMobile) document.documentElement.dataset.mobileLayout = "cover";
+	if (isMobile) document.documentElement.dataset.mobileLayout = "fit";
 	else delete document.documentElement.dataset.mobileLayout;
+}
+
+function refreshGameScale() {
+	directorStore.game?.scale.refresh();
 }
 
 const showDesktopKeyGuide = computed(() =>
@@ -65,6 +69,7 @@ onMounted(() => {
 	stopWatchingDevice = watchDeviceChange(() => {
 		mobile.value = isMobileDevice();
 		applyMobileLayout(mobile.value);
+		window.requestAnimationFrame(refreshGameScale);
 	});
 	const initialScene = gameSave.getCurrentSceneId();
 	const directEntry = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("chapter");
@@ -77,6 +82,7 @@ onMounted(() => {
 	window.addEventListener("honghu:scene-enter", onSceneEnter);
 	(window as any).__honghuAppCleanup = () => window.removeEventListener("honghu:scene-enter", onSceneEnter);
 	directorStore.init(gameEl.value!);
+	window.requestAnimationFrame(refreshGameScale);
 
 	if (import.meta.env.DEV) {
 		const game = directorStore.game!;
