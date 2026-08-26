@@ -20,7 +20,10 @@ export class TitleScene extends Phaser.Scene {
 
 	constructor() {
 		super("TitleScene");
-		this.titleBgm = new Audio(assetPath("/assets/audio/title_bgm.mp3"));
+		// 标题页首次渲染时不要提前下载音轨；真正播放时由浏览器按需拉取。
+		this.titleBgm = new Audio();
+		this.titleBgm.preload = "none";
+		this.titleBgm.src = assetPath("/assets/audio/title_bgm.mp3");
 		this.titleBgm.loop = true;
 	}
 

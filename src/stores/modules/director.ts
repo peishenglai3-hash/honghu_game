@@ -164,7 +164,10 @@ export const useDirectorStore = defineStore("director", () => {
 	const gameSave = useGameSaveStore();
 	const game = shallowRef<Phaser.Game | null>(null);
 	const transitionAudio = new TransitionAudioController();
-	const bgm = new Audio(assetPath("/assets/audio/prologue_bgm.wav"));
+	// 序章 BGM 只在进入序章后播放，避免标题页初始化就下载整段音频。
+	const bgm = new Audio();
+	bgm.preload = "none";
+	bgm.src = assetPath("/assets/audio/prologue_bgm.wav");
 	bgm.loop = true;
 
 	/* ===== 初始化 ===== */
