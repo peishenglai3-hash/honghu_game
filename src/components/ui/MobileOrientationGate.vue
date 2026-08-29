@@ -1,38 +1,52 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue";
-import { isPortraitMobile, isMobileDevice, requestLandscape, watchDeviceChange } from "@/common/device";
+import { isPortraitMobile, requestLandscape, watchDeviceChange } from "@/common/device";
 
 const visible = ref(isPortraitMobile());
+const portrait = ref(isPortraitMobile());
 const requesting = ref(false);
 const portraitOverride = ref(false);
+const fallbackNoticeVisible = ref(false);
 let stopWatchingDevice = () => {};
 let clickSuppressTimer: number | undefined;
+let fallbackNoticeTimer: number | undefined;
 
 function refresh() {
-	visible.value = isPortraitMobile() && !portraitOverride.value;
+	portrait.value = isPortraitMobile();
+	visible.value = portrait.value && !portraitOverride.value;
+	if (!portrait.value) fallbackNoticeVisible.value = false;
 }
 
 async function tryLandscape() {
 	if (requesting.value) return;
 	requesting.value = true;
-	await requestLandscape();
-	suppressNextClick();
-	deferRefresh();
-	requesting.value = false;
+	let switched = false;
+	try {
+		switched = await requestLandscape();
+	} finally {
+		if (!switched && isPortraitMobile()) enterPortraitFallback();
+		suppressNextClick();
+		requesting.value = false;
+		deferRefresh();
+	}
 }
 
-function continuePortrait(event: MouseEvent) {
+function continuePortrait(event: Event) {
 	event.preventDefault();
 	event.stopPropagation();
 	suppressNextClick();
-	portraitOverride.value = true;
+	enterPortraitFallback();
 	deferRefresh();
 }
 
-function blockUnderlyingPointer(event: PointerEvent) {
-	// Phaser 在画布外也会监听指针坐标；遮罩层捕获阶段必须先截断，
-	// 否则与画布重叠的按钮会误触标题菜单热区。
-	event.stopPropagation();
+function enterPortraitFallback() {
+	portraitOverride.value = true;
+	fallbackNoticeVisible.value = true;
+	if (fallbackNoticeTimer !== undefined) window.clearTimeout(fallbackNoticeTimer);
+	fallbackNoticeTimer = window.setTimeout(() => {
+		fallbackNoticeVisible.value = false;
+		fallbackNoticeTimer = undefined;
+	}, 6000);
 }
 
 function deferRefresh() {
@@ -59,13 +73,12 @@ function suppressNextClick() {
 
 onMounted(() => {
 	stopWatchingDevice = watchDeviceChange(refresh);
-	// 这是“自动切换”的最佳努力路径；浏览器若要求用户手势，会由按钮再次尝试。
-	if (isMobileDevice() && isPortraitMobile()) void requestLandscape().then(refresh);
 });
 
 onUnmounted(() => {
 	stopWatchingDevice();
 	if (clickSuppressTimer !== undefined) window.clearTimeout(clickSuppressTimer);
+	if (fallbackNoticeTimer !== undefined) window.clearTimeout(fallbackNoticeTimer);
 });
 </script>
 
@@ -76,22 +89,35 @@ onUnmounted(() => {
 			class="mobile-orientation-gate"
 			role="dialog"
 			aria-modal="true"
-			@pointerdown.capture="blockUnderlyingPointer"
+			@pointerdown.stop
 		>
 			<div class="mobile-orientation-card">
 				<div class="mobile-orientation-icon" aria-hidden="true">↔</div>
 				<h1>请横屏游玩</h1>
-				<p>本游戏按电脑端 16:9 横屏画面设计。请旋转手机，或点击下方按钮尝试自动切换。</p>
+				<p>本游戏按电脑端 16:9 横屏画面设计。请旋转手机，或点击下方按钮尝试自动切换；若浏览器不支持，会直接进入可玩的竖屏适配。</p>
 				<div class="mobile-orientation-actions">
-					<button type="button" @click="tryLandscape">
+					<button
+						type="button"
+						:disabled="requesting"
+						@pointerdown.stop.prevent="tryLandscape"
+						@click.stop="tryLandscape"
+					>
 						{{ requesting ? "正在切换…" : "切换为横屏" }}
 					</button>
-					<button type="button" class="secondary" @click="continuePortrait">
+					<button
+						type="button"
+						class="secondary"
+						@pointerdown.stop.prevent="continuePortrait"
+						@click.stop="continuePortrait"
+					>
 						继续竖屏游玩
 					</button>
 				</div>
-				<small>若浏览器不支持锁定方向，继续后会完整显示画面。</small>
+				<small>旋转手机后画面会自动重新适配；不支持锁定方向时不会卡在此处。</small>
 			</div>
+		</div>
+		<div v-if="fallbackNoticeVisible && portrait" class="mobile-orientation-hint" role="status">
+			当前浏览器未开放自动横屏，已进入竖屏适配；旋转手机后画面会自动放大。
 		</div>
 	</Teleport>
 </template>
@@ -107,6 +133,22 @@ onUnmounted(() => {
 	background: #090908f5;
 	color: #f1e6ce;
 	z-index: 1000;
+}
+
+.mobile-orientation-hint {
+	position: fixed;
+	left: 50%;
+	bottom: max(18px, env(safe-area-inset-bottom));
+	transform: translateX(-50%);
+	width: min(92vw, 520px);
+	padding: 10px 14px;
+	border: 1px solid #8d754d;
+	background: #16130fe8;
+	color: #e8d5ad;
+	font-size: 12px;
+	line-height: 1.5;
+	text-align: center;
+	z-index: 999;
 }
 
 .mobile-orientation-card {
@@ -144,6 +186,11 @@ button {
 	color: #fff0c8;
 	font: 700 14px/1.2 "Noto Serif SC", serif;
 	touch-action: manipulation;
+}
+
+button:disabled {
+	opacity: 0.7;
+	cursor: wait;
 }
 
 .mobile-orientation-actions {

@@ -59,8 +59,18 @@ const portraitTitleBeforeOverride = await page.evaluate(() => {
 		canvas: canvas?.getBoundingClientRect().toJSON(),
 	};
 });
-await page.locator(".mobile-orientation-actions .secondary").tap();
+// 方向锁定在部分安卓 WebView / 微信内置浏览器中会被拒绝；
+// 主按钮必须在这种情况下也能自动进入可玩的退路，不能把玩家卡在门禁层。
+await page.locator(".mobile-orientation-actions button").first().tap();
 await waitFor(() => !document.querySelector(".mobile-orientation-gate"));
+// Chromium may enter fullscreen when the primary orientation action succeeds.
+// Restore the normal window before changing the emulated viewport below so the
+// assertion measures the game's responsive layout, not the browser window mode.
+await page.evaluate(async () => {
+	if (document.fullscreenElement && document.exitFullscreen) {
+		await document.exitFullscreen();
+	}
+});
 const portraitTitleAfterOverride = await page.evaluate(() => {
 	const canvas = document.querySelector("#game canvas");
 	return {
