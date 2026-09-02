@@ -27,7 +27,8 @@ const shouldShow = computed(() =>
 		!hud.infoPanel &&
 		!hud.endPanel &&
 		!hud.portraitPanel &&
-		!hud.creditsVisible,
+		!hud.creditsVisible &&
+		!hud.sceneRecap.visible,
 	),
 );
 

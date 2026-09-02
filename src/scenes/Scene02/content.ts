@@ -115,7 +115,7 @@ export const WRITE_QUESTION: NarrativeEntry[] = [
 		kind: "scene",
 		speaker_id: "STAGE",
 		speaker_name: "画面",
-		text: '你低头看实践笔记。"戴安南"三个字下方，仍留有一大片空白。你想了想，提起笔，在空白处写下：',
+		text: '你低头看实践笔记。"刘绍南"三个字下方，仍留有一大片空白。你想了想，提起笔，在空白处写下：',
 		style: "narration",
 		cps: 15,
 		advance: "manual",
@@ -294,7 +294,7 @@ export const FALL_ASLEEP: NarrativeEntry[] = [
 		speaker_id: "PLAYER",
 		speaker_name: "心理描写",
 		avatar_id: "prologue-player",
-		text: '"最后只剩一个名字还在脑海里一遍一遍播放，戴安南。"',
+		text: '"最后只剩一个名字还在脑海里一遍一遍播放，刘绍南。"',
 		style: "thought",
 		cps: 13,
 		advance: "manual",
@@ -372,8 +372,8 @@ export const PROP_LINES: Record<string, Record<string, string>> = {
 	notebook: {
 		default: "摊开的实践笔记。没写完的问题还停在纸上，墨迹已经干了。",
 		name_checked:
-			'摊开的实践笔记。"戴安南"三个字旁，留着白天核对过的记号。',
-		name_written: '实践笔记摊开着，停在写有"戴安南"的那一页。',
+			'摊开的实践笔记。"刘绍南"三个字旁，留着白天核对过的记号。',
+		name_written: '实践笔记摊开着，停在写有"刘绍南"的那一页。',
 	},
 	phone: {
 		default: "手机屏幕暗着。白天走访拍下的照片还留在相册里。",

@@ -4,6 +4,7 @@ import { useGameStateStore } from "@/stores/modules/gameState";
 import { useGameSaveStore } from "@/stores";
 import { defaultAvatarForSpeaker } from "@/common/avatarCatalog";
 import type { PortraitResult } from "@/common/actionProfileSystem";
+import type { SceneId } from "@/types/common";
 
 // ===== 类型定义 =====
 
@@ -270,6 +271,13 @@ export const useHudStore = defineStore("hud", () => {
 	// --- pause ---
 	const paused = ref(false);
 
+	// --- 场景回顾（只读剧情摘要，不改动当前剧情队列） ---
+	const sceneRecap = reactive({
+		visible: false,
+		sceneId: "PROLOGUE_SC01" as SceneId,
+	});
+	let sceneRecapPreviousPause = false;
+
 	// --- flavor toast ---
 	const flavorToast = ref("");
 
@@ -380,6 +388,7 @@ export const useHudStore = defineStore("hud", () => {
 		let cursor = 0;
 		_narrativeTimer = window.setInterval(
 			() => {
+				if (paused.value) return;
 				dialogue.displayedText = chars.slice(0, ++cursor).join("");
 				if (cursor >= chars.length) {
 					window.clearInterval(_narrativeTimer!);
@@ -654,8 +663,29 @@ export const useHudStore = defineStore("hud", () => {
 
 	// --- 暂停 ---
 	function togglePause() {
+		if (sceneRecap.visible) return;
 		paused.value = !paused.value;
 		gameState.state.paused = paused.value;
+	}
+
+	function openSceneRecap(sceneId: SceneId): void {
+		sceneRecap.sceneId = sceneId;
+		sceneRecapPreviousPause = paused.value;
+		sceneRecap.visible = true;
+		paused.value = true;
+		gameState.state.paused = true;
+	}
+
+	function closeSceneRecap(): void {
+		if (!sceneRecap.visible) return;
+		sceneRecap.visible = false;
+		paused.value = sceneRecapPreviousPause;
+		gameState.state.paused = sceneRecapPreviousPause;
+		sceneRecapPreviousPause = false;
+	}
+
+	function hideSceneRecap(): void {
+		closeSceneRecap();
 	}
 
 	// --- overlay scene ---
@@ -756,6 +786,7 @@ export const useHudStore = defineStore("hud", () => {
 		resultPanel,
 		sceneFade,
 		paused,
+		sceneRecap,
 		flavorToast,
 		endPanel,
 		portraitPanel,
@@ -796,6 +827,9 @@ export const useHudStore = defineStore("hud", () => {
 		fadeToBlack,
 		clearFade,
 		togglePause,
+		openSceneRecap,
+		closeSceneRecap,
+		hideSceneRecap,
 		showOverlay,
 		hideOverlay,
 		hideIntro,

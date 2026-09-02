@@ -60,6 +60,9 @@ export function hidePrompt() { store().hidePrompt(); }
 export function fadeToBlack() { store().fadeToBlack(); }
 export function clearFade() { store().clearFade(); }
 export function togglePause() { store().togglePause(); }
+export function openSceneRecap(sceneId: import("@/types/common").SceneId) { store().openSceneRecap(sceneId); }
+export function closeSceneRecap() { store().closeSceneRecap(); }
+export function hideSceneRecap() { store().hideSceneRecap(); }
 export function hideIntro() { store().hideIntro(); }
 export function showEndPanel(save: any, endMeta?: any) { store().showEndPanel(save, endMeta); }
 export function hideEndPanel() { store().hideEndPanel(); }

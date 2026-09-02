@@ -17,7 +17,6 @@ function onPointerDown(event: PointerEvent): void {
 	>
 		<img :src="hud.resultPanel.image" :alt="''" />
 		<div class="result-copy">
-			<span>{{ hud.resultPanel.pages ? hud.resultPanel.result[0] : `…${hud.resultPanel.result[0]}` }}</span>
 			<span
 				v-for="(line, index) in hud.resultPanel.result"
 				:key="`${index}-${line}`"

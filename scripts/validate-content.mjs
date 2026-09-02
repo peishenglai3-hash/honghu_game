@@ -40,6 +40,7 @@ const {
 const { CH04_WANGYE_TEMPLE_SCENE1 } = await import(
 	"../src/scenes/Scene06/ch04Scene1.content.ts",
 );
+const { SCENE_RECAPS } = await import("../src/common/sceneRecap.ts");
 const fs = await import("node:fs/promises");
 const flavorZones = JSON.parse(await fs.readFile(
 	new URL("../public/data/PRO02_interactions.json", import.meta.url),
@@ -107,6 +108,11 @@ assert(CH04_WANGYE_TEMPLE_SCENE1[4].text === "1927年9月11日\n戴家场王爷�
 assert(CH04_WANGYE_TEMPLE_SCENE1.some((entry) => entry.text.includes("杜家团防已经被打垮")), "chapter 4 stage defeat line lock");
 assert(CH04_WANGYE_TEMPLE_SCENE1.some((entry) => entry.text.includes("涂济洲")), "chapter 4 Tu Jizhou name lock");
 assert(CH04_WANGYE_TEMPLE_SCENE1.some((entry) => entry.text.includes("彭定邦")), "chapter 4 Peng Dingbang name lock");
+assert(Object.keys(SCENE_RECAPS).length === 21, "scene recap registry lock");
+assert(
+	Object.values(SCENE_RECAPS).every((recap) => recap.title && recap.summary && recap.summary.length >= 20),
+	"scene recap copy lock",
+);
 
 const styles = new Set(["narration", "thought", "dialogue", "cue", "date"]);
 const lists = [

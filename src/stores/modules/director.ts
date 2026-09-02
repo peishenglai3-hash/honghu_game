@@ -61,6 +61,7 @@ import {
 	hideCombatHud,
 	clearFade,
 	hideInfoPanel,
+	hideSceneRecap,
 } from "@/common/ui";
 import { useGameSaveStore, SCENE_KEY } from "@/stores";
 import { ambience } from "@/common/ambience";
@@ -447,7 +448,9 @@ export const useDirectorStore = defineStore("director", () => {
 	}
 
 	function clearStoryUi(): void {
-		useHudStore().paused = false;
+		const hudStore = useHudStore();
+		hideSceneRecap();
+		hudStore.paused = false;
 		gameState.state.paused = false;
 		hideIntro();
 		hideEndPanel();

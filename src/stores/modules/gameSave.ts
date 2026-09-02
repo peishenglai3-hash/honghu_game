@@ -326,6 +326,8 @@ export const useGameSaveStore = defineStore("gameSave", () => {
 	function autosave(sceneId: SceneId): RunSave | null {
 		const { state } = useGameStateStore();
 		lastSceneId = sceneId;
+		if (typeof window !== "undefined")
+			window.dispatchEvent(new CustomEvent("honghu:scene-checkpoint", { detail: { sceneId } }));
 		const tags = [...state.flags];
 		const fixed = tags.filter((t) => FIXED_TAGS.includes(t));
 		const save = buildSave("auto", sceneId, tags, fixed, { ...state.risk });
