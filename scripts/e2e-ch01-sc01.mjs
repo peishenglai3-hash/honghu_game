@@ -5,6 +5,10 @@ const out = '.tmp_e2e/ch01-sc01/';
 mkdirSync(out, { recursive: true });
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const PORT = process.env.E2E_PORT || '5175';
+const fail = (message) => {
+  console.error('FAIL:', message);
+  process.exit(1);
+};
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
@@ -85,7 +89,7 @@ async function interactAt(x, y, name) {
 }
 
 await interactAt(176, 576, 'basin');
-await interactAt(1456, 672, 'desk');
+await interactAt(1300, 550, 'desk');
 await interactAt(1520, 256, 'door');
 
 // Trigger choice 1 at family
@@ -108,17 +112,28 @@ await page.screenshot({ path: out + 'ch01_sc01_choice.png' });
 // Pick choice A (first button)
 await page.evaluate(() => document.querySelectorAll('.choice-panel .choice')[0]?.click());
 await sleep(800);
+const q1Poster = await page.evaluate(() => {
+  const image = document.querySelector('.result-panel img');
+  return image ? { src: image.getAttribute('src'), width: image.naturalWidth, height: image.naturalHeight } : null;
+});
+if (!q1Poster?.src?.includes('/assets/ch01/choices/response/response-A.png')) fail('Q1 result poster missing');
+if (q1Poster.width !== 1672 || q1Poster.height !== 941) fail('Q1 result poster dimensions incorrect');
 await page.screenshot({ path: out + 'ch01_sc01_result.png' });
 console.log('  mode after choice:', await page.evaluate(() => window.prologueState?.mode));
-// Close result -> beginInkEvent (shows ink task card)
-await page.keyboard.press('Space');
+// 桌面鼠标点击也应能退出结果海报，和键盘/触摸保持一致。
+await page.mouse.click(640, 360);
 await sleep(500);
+const modeAfterMouseResult = await page.evaluate(() => window.prologueState?.mode);
+if (modeAfterMouseResult !== 'explore') fail(`mouse did not close result panel: ${modeAfterMouseResult}`);
 // Close the ink task card
+await page.evaluate(() => window.ch01Sc01Game.player.setPosition(800, 80));
+await page.keyboard.press('e');
+await sleep(400);
 await page.keyboard.press('e');
 await sleep(400);
 
 // Ink event at desk
-await page.evaluate(() => window.ch01Sc01Game.player.setPosition(1344, 736));
+await page.evaluate(() => window.ch01Sc01Game.player.setPosition(1500, 700));
 await sleep(500);
 console.log('  nearby ink:', await page.evaluate(() => window.ch01Sc01Game.nearby()?.id || 'none'));
 await page.keyboard.press('e');

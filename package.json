@@ -7,6 +7,7 @@
 		"dev": "vite",
 		"build": "vite build",
 		"test:content": "tsx scripts/validate-content.mjs",
+		"test:ch01:posters": "tsx scripts/validate-ch01-choice-posters.mjs",
 		"test:systems": "tsx scripts/validate-systems.mjs",
 		"test:ch03:contract": "tsx scripts/validate-ch03-contract.mjs",
 		"test:ch04:contract": "tsx scripts/validate-ch04-contract.mjs",

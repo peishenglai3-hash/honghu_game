@@ -342,7 +342,7 @@ export const Q3_CHOICES: ReturnChoice[] = [
 				entry_id: "RT_Q3D5",
 				kind: "narration",
 				speaker_name: "旁白",
-				text: "屋内的女人抬头看了你一眼。她没有听见具体内容，却已察觉门外的人不愿在门口久留。",
+				text: "屋内的女人抬头看了你一眼。她没有听见具体内容，却已经察觉门外的人不愿在门口久留。",
 				style: "narration",
 				cps: 14,
 				advance: "manual",
@@ -732,6 +732,24 @@ export const Q4_CHOICES: ReturnChoice[] = [
 
 // 章末黑幕叙述
 export const ENDING_NARRATIVE: NarrativeEntry[] = [
+	{
+		entry_id: "RT_E0_CONTACT",
+		kind: "narration",
+		speaker_name: "旁白",
+		text: "门外的联络人已经转过身去，没有催促，只在夜色里等着。",
+		style: "narration",
+		cps: 12,
+		advance: "manual",
+	},
+	{
+		entry_id: "RT_E0_LAMP",
+		kind: "narration",
+		speaker_name: "旁白",
+		text: "屋内，女人将油灯的灯芯拨低。她没有再叫“继南”。",
+		style: "narration",
+		cps: 12,
+		advance: "manual",
+	},
 	{
 		entry_id: "RT_E1",
 		kind: "narration",

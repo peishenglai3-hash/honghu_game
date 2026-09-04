@@ -14,6 +14,7 @@ import {
 	hidePrompt,
 	playNarrative,
 	advanceNarrative,
+	advanceResult,
 	showChoices,
 	hideChoices,
 	hideDialogue,
@@ -23,6 +24,7 @@ import {
 	fadeToBlack,
 	clearFade,
 	togglePause,
+	showResult,
 } from "@/common/ui";
 import {
 	ARRIVE_NARRATIVE,
@@ -55,6 +57,7 @@ import {
 } from "@/common/chenWalk";
 import type { ChenWalkDirection } from "@/common/chenWalk";
 import { playInkTransition } from "@/common/inkTransition";
+import { chapter1ChoicePosterPath, type Chapter1ChoiceLetter } from "./ch01ChoicePosters";
 
 // 地图完整使用底图原始尺寸（1672×941），不缩放不改裁
 const WORLD_W = 1672;
@@ -69,7 +72,6 @@ interface ManifestData {
 	interactions: { id: string; prompt?: string; rect: [number, number, number, number]; type?: string }[];
 	foreground_occlusion?: { reserved: boolean; objects: unknown[] };
 }
-
 // 第一章场景2：闪回一·状纸（陈家室内·白日）
 export class Ch01Sc02Scene extends Phaser.Scene {
 	zoneEditor: any;
@@ -179,7 +181,8 @@ export class Ch01Sc02Scene extends Phaser.Scene {
 		this.keyMap = createKeyMap(this);
 		onAction(this, "INTERACT", () => this.handleConfirm());
 		onAction(this, "ADVANCE", () => {
-			if (this.state.inNarrative) advanceNarrative();
+			if (this.state.mode === "result") advanceResult();
+			else if (this.state.inNarrative) advanceNarrative();
 		});
 		onAction(this, "PAUSE", () => togglePause());
 		if (import.meta.env.DEV) (window as any).ch01Sc02Game = this;
@@ -547,7 +550,6 @@ export class Ch01Sc02Scene extends Phaser.Scene {
 		});
 		useGameSaveStore().autosave("CH01_SC02");
 		hideChoices();
-		this.state.mode = "narrative";
 		const thoughts: NarrativeEntry[] = choice.thoughts.map((text, index) => ({
 			entry_id: `FB01_Q2_${choice.id}_${index}`,
 			kind: "thought",
@@ -557,7 +559,19 @@ export class Ch01Sc02Scene extends Phaser.Scene {
 			cps: 12,
 			advance: "manual",
 		}));
-		playNarrative([...thoughts, ...EXIT_NARRATIVE], () => this.completeFlashback());
+		const letter = choice.id.slice(-1) as Chapter1ChoiceLetter;
+		this.state.mode = "result";
+		this.state.playerLocked = true;
+		showResult({
+			image: chapter1ChoicePosterPath("Q2", letter),
+			result: [`你选择了“${choice.label}”。`, "当前理解已记录。按空格退出图片，进入心理描写。"],
+			hint: "空格 退出",
+			onComplete: () => {
+				this.state.mode = "narrative";
+				this.state.playerLocked = true;
+				playNarrative([...thoughts, ...EXIT_NARRATIVE], () => this.completeFlashback());
+			},
+		});
 	}
 
 	completeFlashback() {

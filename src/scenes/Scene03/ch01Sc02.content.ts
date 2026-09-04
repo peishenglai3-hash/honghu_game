@@ -33,7 +33,6 @@ export const ARRIVE_NARRATIVE: NarrativeEntry[] = [
 		advance: "manual",
 	},
 ];
-
 // beat1：门边渔民——湖上的委屈与写状纸
 export const FISHERMAN_CHAIN: NarrativeEntry[] = [
 	{
@@ -257,7 +256,7 @@ export const EXIT_NARRATIVE: NarrativeEntry[] = [
 		entry_id: "FB01_X3",
 		kind: "thought",
 		speaker_name: "心理描写",
-		text: "可是那种迟疑过后仍决定写下去的感觉，我还记得。",
+		text: "可是那种那种迟疑过后仍决定写下去的感觉，我还记得。",
 		style: "thought",
 		cps: 12,
 		advance: "manual",

@@ -2,6 +2,7 @@ import type { NarrativeEntry } from "@/types/common";
 import { assetPath } from "@/common/paths";
 import type { ProfileDelta, RiskDelta } from "@/common/actionProfileSystem";
 import { FLAGS } from "./ch01Sc01.flags";
+import { chapter1ChoicePosterPath } from "./ch01ChoicePosters";
 
 export interface Choice {
 	id: string;
@@ -47,7 +48,6 @@ export const PROP_PATHS = {
 		"/assets/ch01/sc01/props/PROP031_Sandals_Icon_v01.png",
 	),
 };
-
 /** manifest 的 prop_icon 是短名（如 PROP016），实际图标文件名含完整描述名，短名拼不出真路径 */
 export const PROP_ICON_FILES: Record<string, string> = {
 	PROP004: PROP_PATHS.BOOK,
@@ -347,12 +347,12 @@ export const CHOICES: Choice[] = [
 		id: "CH01_Q01_A",
 		label: "压下慌乱，低声应答：“方才做了个怪梦。”",
 		detail: "行动决断 +1，情境调适 +1，身份风险 +0",
-		image: assetPath("/assets/choices/a.png"),
+		image: chapter1ChoicePosterPath("Q1", "A"),
 		flag: FLAGS.CHOICE1_A,
 		echo_summary: "我用一个梦，把这一刻先掩了过去。",
 		result: [
-			"女人没有马上追问梦见了什么，只把水递得更近。",
-			"“这几日你总是睡不安稳。外头的事再急，也不能把人熬坏了。”",
+			"女人没有马上追问梦见了什么，只把水递得更近。\n“这几日你总是睡不安稳。外头的事再急，也不能把人熬坏了。”",
+			"她说完，目光在你脸上停了一会儿。比起怀疑，更像一种无处安放的担心。\n“这下不用我自己想理由了。”",
 		],
 		profileDelta: { D: 1, A: 1 },
 		riskDelta: { identity: 0 },
@@ -362,12 +362,12 @@ export const CHOICES: Choice[] = [
 		id: "CH01_Q01_B",
 		label: "先不回答名字，反问：“外头方才有人说话？”",
 		detail: "审慎判断 +2，情境调适 +1，身份风险 +0，执行风险 +0",
-		image: assetPath("/assets/choices/b.png"),
+		image: chapter1ChoicePosterPath("Q1", "B"),
 		flag: FLAGS.CHOICE1_B,
 		echo_summary: "我先把话题引到了门外。",
 		result: [
 			"女人顺着你的目光朝门外看了一眼。",
-			"“风声吧。哪家的门响一下，都像有人来了。”\n“方才外头好像有人走过，我没听清是不是来找你的。”",
+			"“风声吧。哪家的门响一下，都像有人来了。”\n她停了停，又补了一句：\n“方才外头好像有人走过，我没听清是不是来找你的。”\n“她只知道有人来找陈继南。至于来的是谁、为了什么，她似乎并不清楚。”",
 		],
 		profileDelta: { C: 2, A: 1 },
 		riskDelta: { identity: 0, execution: 0 },
@@ -377,12 +377,12 @@ export const CHOICES: Choice[] = [
 		id: "CH01_Q01_C",
 		label: "盯着她，直接问：“陈继南是谁？”",
 		detail: "原则坚持 +1，审慎判断 +1，身份风险 +2，后续标签 FAMILY_DOUBT",
-		image: assetPath("/assets/choices/c.png"),
+		image: chapter1ChoicePosterPath("Q1", "C"),
 		flag: FLAGS.CHOICE1_C,
 		echo_summary: "我问出了一个不该问的问题。",
 		result: [
-			"屋里安静了一瞬。女人的手停在半空，碗沿轻轻磕到桌面。",
-			"“你发什么热？你就是陈继南。”\n“你是不是睡糊涂了？晚饭前还说今晚有事要出去，怎么一觉醒来，连自己是谁都记不得了？”",
+			"屋里安静了一瞬。女人的手停在半空，碗沿轻轻磕到桌面。她没有后退，只是把声音压得更低。\n“你发什么热？你就是陈继南。”",
+			"她伸手碰了碰你的额头，又迅速收回手。\n“你是不是睡糊涂了？晚饭前还说今晚有事要出去，怎么一觉醒来，连自己是谁都记不得了？”\n“她没有起疑心。她只会以为陈继南忽然病了，或者怕了。”\n“看来陈继南今晚确实打算出门。”",
 		],
 		profileDelta: { P: 1, C: 1 },
 		riskDelta: { identity: 2 },
@@ -392,7 +392,7 @@ export const CHOICES: Choice[] = [
 		id: "CH01_Q01_D",
 		label: "借着低头喝水的动作拖出片刻时间：“我有些头晕。让我缓一缓。”",
 		detail: "审慎判断 +2，个人担当 +1，身份风险 +0",
-		image: assetPath("/assets/choices/d.png"),
+		image: chapter1ChoicePosterPath("Q1", "D"),
 		flag: FLAGS.CHOICE1_D,
 		echo_summary: "我给自己争到了一点喘息的时间。",
 		result: [

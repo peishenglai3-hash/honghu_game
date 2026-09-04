@@ -21,6 +21,7 @@ import {
 	showChoices,
 	hideChoices,
 	showResult,
+	advanceResult,
 	hideResult,
 	showEndPanel,
 	hideDialogue,
@@ -51,6 +52,7 @@ import { addManagedBgm } from "@/common/audioBus";
 import { playInkTransition } from "@/common/inkTransition";
 import { RETURN_NARRATIVE } from "./ch01Sc02.content";
 import { KNOCK_CHAIN, DOOR_CODE_CHAIN, Q3_CHOICES, Q4_CHOICES, FAREWELL_INTRO, ENDING_NARRATIVE, END_SUBTITLE } from "./ch01Return.content";
+import { chapter1ChoicePosterPath, type Chapter1ChoiceLetter } from "./ch01ChoicePosters";
 // @ts-ignore Shared developer tools support both grid and pixel-coordinate scenes.
 import { CollisionEditor } from "../../zone-editor.js";
 // @ts-ignore Shared foreground renderer is implemented in JavaScript.
@@ -111,7 +113,6 @@ interface ManifestData {
 		initially_blocked: boolean;
 	}[];
 }
-
 export class Ch01Sc01Scene extends Phaser.Scene {
 	zoneEditor: any;
 	playerColliderProfile: any;
@@ -253,7 +254,7 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 				return this.skipIntroVideo();
 			if (this.videoOverlay && this.state.mode === "transition")
 				return this.skipFinaleVideo();
-			if (this.state.mode === "result") this.beginInkEvent();
+			if (this.state.mode === "result") advanceResult();
 			else if (this.state.inNarrative) advanceNarrative();
 			else if (itemPanelOpen()) closeItem();
 		});
@@ -805,8 +806,13 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 		});
 		useGameSaveStore().autosave("CH01_SC01");
 		hideChoices();
-		showResult(choice);
 		this.state.mode = "result";
+		this.state.playerLocked = true;
+		showResult({
+			...choice,
+			hint: "空格 退出",
+			onComplete: () => this.beginInkEvent(),
+		});
 		this.saveProgress();
 	}
 
@@ -891,9 +897,18 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 		});
 		useGameSaveStore().autosave("CH01_SC01");
 		hideChoices();
-		this.state.mode = "narrative";
 		this.state.playerLocked = true;
-		playNarrative(choice.feedback, () => this.afterQ3());
+		this.state.mode = "result";
+		showResult({
+			image: chapter1ChoicePosterPath("Q3", choice.id.slice(-1) as Chapter1ChoiceLetter),
+			result: [`你选择了“${choice.label}”。`, "当前判断已记录。按空格退出图片，进入剧情反馈。"],
+			hint: "空格 退出",
+			onComplete: () => {
+				this.state.mode = "narrative";
+				this.state.playerLocked = true;
+				playNarrative(choice.feedback, () => this.afterQ3());
+			},
+		});
 	}
 
 	afterQ3() {
@@ -933,9 +948,18 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 		});
 		useGameSaveStore().autosave("CH01_SC01");
 		hideChoices();
-		this.state.mode = "narrative";
 		this.state.playerLocked = true;
-		playNarrative(choice.feedback, () => this.afterQ4());
+		this.state.mode = "result";
+		showResult({
+			image: chapter1ChoicePosterPath("Q4", choice.id.slice(-1) as Chapter1ChoiceLetter),
+			result: [`你选择了“${choice.label}”。`, "当前告别已记录。按空格退出图片，进入剧情反馈。"],
+			hint: "空格 退出",
+			onComplete: () => {
+				this.state.mode = "narrative";
+				this.state.playerLocked = true;
+				playNarrative(choice.feedback, () => this.afterQ4());
+			},
+		});
 	}
 
 	afterQ4() {

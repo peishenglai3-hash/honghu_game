@@ -72,6 +72,12 @@ await page.screenshot({ path: out + 'ret_01_q3.png' });
 await page.evaluate(() => document.querySelectorAll('.choice-panel .choice')[0]?.click());
 await sleep(600);
 if (!(await hasFlag('CH01_Q3_A'))) fail('Q3_A not set');
+const q3Poster = await page.evaluate(() => {
+  const image = document.querySelector('.result-panel img');
+  return image ? { src: image.getAttribute('src'), width: image.naturalWidth, height: image.naturalHeight } : null;
+});
+if (!q3Poster?.src?.includes('/assets/ch01/choices/door-code/door-code-A.png')) fail('Q3 result poster missing');
+if (q3Poster.width !== 1672 || q3Poster.height !== 941) fail('Q3 result poster dimensions incorrect');
 console.log('3 Q3 chosen, advancing through feedback');
 // Advance through Q3 feedback narrative (5 entries for A), then black screen → SC03
 await advance(() => false, 80); // exhaust narrative entries
@@ -134,6 +140,12 @@ await page.evaluate(() => document.querySelectorAll('.choice-panel .choice')[0]?
 await sleep(600);
 if (!(await hasFlag('CH01_Q4_A'))) fail('Q4_A not set');
 if (!(await hasFlag('MOONCAKE_PROMISE'))) fail('MOONCAKE_PROMISE not set');
+const q4Poster = await page.evaluate(() => {
+  const image = document.querySelector('.result-panel img');
+  return image ? { src: image.getAttribute('src'), width: image.naturalWidth, height: image.naturalHeight } : null;
+});
+if (!q4Poster?.src?.includes('/assets/ch01/choices/farewell/farewell-A.png')) fail('Q4 result poster missing');
+if (q4Poster.width !== 1672 || q4Poster.height !== 941) fail('Q4 result poster dimensions incorrect');
 console.log('7 Q4 done (mooncake tag set)');
 await advance(() => window.prologueState.mode === 'explore', 30);
 await closeTask();

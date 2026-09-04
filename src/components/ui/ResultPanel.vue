@@ -3,7 +3,7 @@ import { useHudStore } from "@/stores/modules/hud";
 const hud = useHudStore();
 
 function onPointerDown(event: PointerEvent): void {
-	if (!hud.resultPanelVisible || event.pointerType === "mouse") return;
+	if (!hud.resultPanelVisible) return;
 	event.preventDefault();
 	hud.advanceResult();
 }
@@ -21,7 +21,7 @@ function onPointerDown(event: PointerEvent): void {
 				v-for="(line, index) in hud.resultPanel.result"
 				:key="`${index}-${line}`"
 				v-show="line"
-			>{{ line }}</span>
+				>{{ line }}</span>
 			<small>{{ hud.resultPanel.hint || "空格 继续" }}</small>
 		</div>
 	</div>
