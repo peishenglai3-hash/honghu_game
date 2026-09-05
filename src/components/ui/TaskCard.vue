@@ -6,7 +6,19 @@ const hud = useHudStore();
 
 <template>
 	<div v-if="hud.taskCards.length" class="task-layer" aria-live="polite" aria-label="当前任务">
-		<TransitionGroup name="task-list">
+		<button
+			v-if="!hud.taskCenter"
+			class="task-toggle"
+			:class="{ collapsed: !hud.taskPanelVisible }"
+			type="button"
+			:title="hud.taskPanelVisible ? '收起任务提示' : '打开任务提示'"
+			@click.stop="hud.toggleTaskPanel"
+		>
+			<kbd>Q</kbd>
+			<em>{{ hud.taskPanelVisible ? "收起任务" : "查看任务" }}</em>
+		</button>
+
+		<TransitionGroup v-if="hud.taskPanelVisible" name="task-list">
 			<article
 				v-for="(task, index) in hud.visibleTaskCards"
 				:key="task.id"
@@ -29,7 +41,7 @@ const hud = useHudStore();
 		</TransitionGroup>
 
 		<div
-			v-if="hud.taskCards.length > 3 && !hud.taskCenter"
+		v-if="hud.taskPanelVisible && hud.taskCards.length > 3 && !hud.taskCenter"
 			class="task-overflow-controls"
 		>
 			<button
@@ -70,7 +82,7 @@ const hud = useHudStore();
 	right: clamp(36px, 3vw, 48px);
 	width: min(360px, 32vw);
 	height: 124px;
-	padding: 10px 14px 32px;
+	padding: 10px 94px 32px 14px;
 	overflow: hidden;
 	display: flex;
 	flex-direction: column;
@@ -106,6 +118,38 @@ const hud = useHudStore();
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+.task-toggle {
+	position: absolute;
+	top: 24px;
+	right: clamp(46px, calc(3vw + 10px), 58px);
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 4px;
+	border: 1px solid #7c633f;
+	border-radius: 4px;
+	background: #201811d9;
+	color: #e8d3a8;
+	font: 9px/1 "Noto Serif SC", serif;
+	pointer-events: auto;
+	cursor: pointer;
+	z-index: 40;
+}
+
+.task-toggle.collapsed {
+	top: 16px;
+	right: 10px;
+}
+
+.task-toggle:hover {
+	border-color: #e0b864;
+	background: #4a3822e8;
+}
+
+.task-toggle em {
+	font-style: normal;
 }
 
 .task-detail {
@@ -263,7 +307,7 @@ kbd {
 		right: 42px;
 		width: min(68vw, 320px);
 		height: 116px;
-		padding: 9px 11px 30px;
+		padding: 9px 80px 30px 11px;
 	}
 
 	.task-card.center {
@@ -277,6 +321,11 @@ kbd {
 		top: 10px;
 		right: 8px;
 		height: 248px;
+	}
+
+	.task-toggle:not(.collapsed) {
+		top: 18px;
+		right: 50px;
 	}
 }
 </style>

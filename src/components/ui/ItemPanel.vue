@@ -9,7 +9,12 @@ function onClose() {
 
 <template>
 	<div v-if="hud.itemPanel" class="item-panel">
-		<img :src="hud.itemPanel.icon" :alt="hud.itemPanel.title" />
+		<img
+			:src="hud.itemPanel.icon"
+			:alt="hud.itemPanel.title"
+			decoding="async"
+			fetchpriority="high"
+		/>
 		<div>
 			<strong>{{ hud.itemPanel.title }}</strong>
 			<span>{{ hud.itemPanel.text }}</span>
@@ -29,19 +34,23 @@ function onClose() {
 	min-width: 142px;
 	aspect-ratio: 1263 / 2028;
 	pointer-events: auto;
-	background: url("/assets/ui/keyed/item.png") center / 100% 100% no-repeat;
+	/* 原始 1263×2028 版本保留；运行时使用同构半尺寸副本，适配当前 164px 卡片。 */
+	background: url("/assets/ui/keyed/item-runtime.png") center / 100% 100% no-repeat;
 	color: #211b15;
 	z-index: 20;
 }
 
 .item-panel img {
 	position: absolute;
-	left: 10%;
-	top: 9%;
-	width: 80%;
-	height: 38%;
+	/* item.png 左上深色框约占面板左侧 44%；槽位按该框留出安全边界。 */
+	left: 0;
+	top: 14%;
+	width: 56%;
+	height: 32%;
 	object-fit: contain;
 	object-position: center;
+	transform: scale(0.85);
+	transform-origin: center;
 }
 
 .item-panel div {

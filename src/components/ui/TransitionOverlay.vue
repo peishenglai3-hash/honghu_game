@@ -31,7 +31,7 @@ defineProps<{
 			class="transition-reveal"
 			:class="{ visible: revealFadeIn }"
 		>
-			<img :src="revealSrc" alt="" />
+			<img :src="revealSrc" alt="" decoding="async" />
 		</div>
 	</div>
 </template>

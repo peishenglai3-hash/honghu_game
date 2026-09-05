@@ -33,7 +33,8 @@ const shouldShow = computed(() =>
 );
 
 // 对话和视频过渡没有稳定的 DOM 按钮，移动端允许点击画面任意位置推进。
-// 选择、照片结果、信息卡和任务卡打开时关闭该层，避免误触或挡住原有控件。
+// 选择、照片结果和信息卡打开时关闭该层；任务卡保留独立的 Q 任务按钮，
+// 让玩家可以收起/重新打开任务提示，而不会误触 E 的剧情交互。
 const showTapAdvance = computed(() =>
 	Boolean(
 		shouldShow.value &&
@@ -150,6 +151,11 @@ onUnmounted(() => {
 
 		<div class="mobile-action-pad">
 			<button class="mobile-action" @pointerdown="tap('INTERACT', $event)">交互 E</button>
+			<button
+				v-if="hud.taskCards.length"
+				class="mobile-action mobile-action-task"
+				@pointerdown="tap('TASK_TOGGLE', $event)"
+			>任务 Q</button>
 			<button class="mobile-action mobile-action-primary" @pointerdown="tap('ADVANCE', $event)">空格</button>
 			<button
 				v-if="hud.combatHud.visible"
@@ -237,6 +243,11 @@ button:active {
 .mobile-action-primary {
 	border-color: #e2bd6b;
 	background: #5a3d18e8;
+}
+
+.mobile-action-task {
+	border-color: #d4ad69;
+	background: #3e2d18e8;
 }
 
 .mobile-action-combat {

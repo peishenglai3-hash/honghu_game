@@ -30,6 +30,7 @@ function toggle() {
 				<span>移动</span>
 			</div>
 			<div class="key-guide-row"><kbd>E</kbd><span>交互</span></div>
+			<div class="key-guide-row"><kbd>Q</kbd><span>任务开关</span></div>
 			<div class="key-guide-row"><kbd>空格</kbd><span>推进</span></div>
 			<div class="key-guide-row"><kbd>Esc</kbd><span>暂停</span></div>
 		</div>

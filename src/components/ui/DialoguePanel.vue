@@ -36,6 +36,8 @@ function onPointerDown(event: PointerEvent) {
 							hud.dialogue.avatarSrc,
 						),
 					}"
+					decoding="async"
+					fetchpriority="high"
 				/>
 			</div>
 		</div>
@@ -63,7 +65,8 @@ function onPointerDown(event: PointerEvent) {
 	aspect-ratio: 2629 / 1398;
 	pointer-events: auto;
 	touch-action: manipulation;
-	background: url("/assets/ui/keyed/dialogue.png") center / 100% 100%
+	/* 原始 2629×1398 版本保留；对话框最大显示宽度为 480px。 */
+	background: url("/assets/ui/keyed/dialogue-runtime.png") center / 100% 100%
 		no-repeat;
 	z-index: 20;
 }

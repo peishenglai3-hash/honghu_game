@@ -82,6 +82,12 @@ const playerAnimationKey = (direction: PlayerDirection) =>
 	`ch01-sc01-player-${direction}-anim`;
 const PLAYER_DISPLAY_HEIGHT = 280;
 const CAMERA_ZOOM = 0.765;
+const CHOICE1_FLAGS = [
+	FLAGS.CHOICE1_A,
+	FLAGS.CHOICE1_B,
+	FLAGS.CHOICE1_C,
+	FLAGS.CHOICE1_D,
+] as const;
 
 interface ManifestData {
 	spawns: { id: string; position: [number, number]; facing: string }[];
@@ -136,7 +142,7 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 		width: number;
 		height: number;
 	}[];
-	observationMarks: Phaser.GameObjects.Text[] = [];
+	observationMarks: Array<Phaser.GameObjects.Text | Phaser.GameObjects.Container> = [];
 	videoOverlay?: Phaser.GameObjects.Video;
 	introVideoSkipReady = false;
 	bgm?: Phaser.Sound.BaseSound;
@@ -513,6 +519,67 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 		});
 	}
 
+	objectiveAnchor(id: string, fallback: [number, number]): [number, number] {
+		return this.manifest.objectives?.find((objective) => objective.id === id)?.anchor ?? fallback;
+	}
+
+	interactionAnchor(id: string, fallback: [number, number]): [number, number] {
+		return this.manifest.interactions.find((interaction) => interaction.id === id)?.prompt_anchor ?? fallback;
+	}
+
+	addRedObjectiveMarker([x, y]: [number, number]) {
+		const mark = this.add
+			.text(x, y, "!", {
+				fontFamily: "monospace",
+				fontSize: "48px",
+				color: "#ff2222",
+				stroke: "#000000",
+				strokeThickness: 4,
+			})
+			.setOrigin(0.5)
+			.setDepth(WORLD_INDICATOR_DEPTH);
+		this.tweens.add({
+			targets: mark,
+			scale: { from: 1, to: 1.2 },
+			duration: 600,
+			yoyo: true,
+			repeat: -1,
+		});
+		this.observationMarks.push(mark);
+	}
+
+	addYellowObjectiveMarker([x, y]: [number, number]) {
+		const marker = this.add
+			.container(x, y)
+			.setDepth(WORLD_INDICATOR_DEPTH);
+		const badge = this.add.graphics();
+		badge.fillStyle(0xf0cf67, 1);
+		badge.fillRoundedRect(-14, -17, 28, 32, 5);
+		badge.fillTriangle(-8, 14, 8, 14, 0, 24);
+		badge.lineStyle(2, 0x4a2c1f, 1);
+		badge.strokeRoundedRect(-14, -17, 28, 32, 5);
+		const symbol = this.add
+			.text(0, -2, "!", {
+				color: "#4a2c1f",
+				fontFamily: "monospace",
+				fontSize: "20px",
+				fontStyle: "bold",
+				stroke: "#fff3b0",
+				strokeThickness: 1,
+			})
+			.setOrigin(0.5);
+		marker.add([badge, symbol]);
+		this.tweens.add({
+			targets: marker,
+			y: y - 12,
+			duration: 520,
+			yoyo: true,
+			repeat: -1,
+			ease: "Sine.easeInOut",
+		});
+		this.observationMarks.push(marker);
+	}
+
 	updateObservationMarks() {
 		for (const mark of this.observationMarks) mark.destroy();
 		this.observationMarks = [];
@@ -528,25 +595,21 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 			};
 			const flag = flagMap[obs.id];
 			if (flag && this.state.flags.has(flag)) continue;
-			const [x, y] = obs.anchor;
-			const mark = this.add
-				.text(x, y, "!", {
-					fontFamily: "monospace",
-					fontSize: "48px",
-					color: "#ff2222",
-					stroke: "#000000",
-					strokeThickness: 4,
-				})
-				.setOrigin(0.5)
-				.setDepth(WORLD_INDICATOR_DEPTH);
-			this.tweens.add({
-				targets: mark,
-				scale: { from: 1, to: 1.2 },
-				duration: 600,
-				yoyo: true,
-				repeat: -1,
-			});
-			this.observationMarks.push(mark);
+			this.addRedObjectiveMarker(obs.anchor);
+		}
+
+		const observationsComplete = [
+			FLAGS.OBS_BASIN,
+			FLAGS.OBS_DESK,
+			FLAGS.OBS_DOOR,
+		].every((flag) => this.state.flags.has(flag));
+		const choice1Complete = CHOICE1_FLAGS.some((flag) => this.state.flags.has(flag));
+		if (observationsComplete && !choice1Complete && !this.state.flags.has(FLAGS.INK_DONE)) {
+			// 金色徽标沿用序章/后续章节的任务提示，用来区别可观察物品的红色 !。
+			this.addYellowObjectiveMarker(this.objectiveAnchor("OBJ_TALK_MOTHER", [704, 416]));
+		} else if (choice1Complete && !this.state.flags.has(FLAGS.INK_DONE)) {
+			// 选择一完成后，红色 ! 转移到新的纸与笔交互点。
+			this.addRedObjectiveMarker(this.interactionAnchor("inkstone_paper", [1376, 640]));
 		}
 	}
 
@@ -805,6 +868,7 @@ export class Ch01Sc01Scene extends Phaser.Scene {
 			failureCheck: false,
 		});
 		useGameSaveStore().autosave("CH01_SC01");
+		this.updateObservationMarks();
 		hideChoices();
 		this.state.mode = "result";
 		this.state.playerLocked = true;

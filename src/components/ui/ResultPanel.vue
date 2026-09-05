@@ -15,7 +15,12 @@ function onPointerDown(event: PointerEvent): void {
 		class="result-panel"
 		@pointerdown="onPointerDown"
 	>
-		<img :src="hud.resultPanel.image" :alt="''" />
+		<img
+			:src="hud.resultPanel.image"
+			:alt="''"
+			decoding="async"
+			fetchpriority="high"
+		/>
 		<div class="result-copy">
 			<span
 				v-for="(line, index) in hud.resultPanel.result"

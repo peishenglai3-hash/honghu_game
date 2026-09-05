@@ -38,6 +38,7 @@ import SceneRecapPanel from "@/components/ui/SceneRecapPanel.vue";
 import { useGameStateStore } from "@/stores/modules/gameState";
 import { useGameSaveStore } from "@/stores";
 import { isMobileDevice, watchDeviceChange } from "@/common/device";
+import { onGlobalAction } from "@/common/actions";
 
 const hud = useHudStore();
 const directorStore = useDirectorStore();
@@ -50,6 +51,7 @@ const gameStarted = ref(
 );
 const prologueKeyGuide = ref(false);
 let stopWatchingDevice = () => {};
+let stopTaskToggle = () => {};
 
 function applyMobileLayout(isMobile: boolean) {
 	if (typeof document === "undefined") return;
@@ -67,6 +69,7 @@ const showDesktopKeyGuide = computed(() =>
 
 onMounted(() => {
 	applyMobileLayout(mobile.value);
+	stopTaskToggle = onGlobalAction("TASK_TOGGLE", () => hud.toggleTaskPanel());
 	stopWatchingDevice = watchDeviceChange(() => {
 		mobile.value = isMobileDevice();
 		applyMobileLayout(mobile.value);
@@ -121,6 +124,7 @@ function onDone() {
 
 onUnmounted(() => {
 	stopWatchingDevice();
+	stopTaskToggle();
 	if (typeof document !== "undefined") delete document.documentElement.dataset.mobileLayout;
 	(window as any).__honghuAppCleanup?.();
 });

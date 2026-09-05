@@ -46,6 +46,7 @@ export function hideResult() { store().hideResult(); }
 export function advanceResult() { return store().advanceResult(); }
 export function showTask(task: any) { store().showTask(task); }
 export function closeTask() { store().closeTask(); }
+export function toggleTaskPanel() { return store().toggleTaskPanel(); }
 export function hideTask() { store().hideTask(); }
 export function taskNeedsConfirmation() { return store().taskNeedsConfirmation(); }
 export function getPlayerMovementMultiplier() { return store().devPlayerTuning.movementMultiplier; }

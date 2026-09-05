@@ -226,6 +226,7 @@ export const useHudStore = defineStore("hud", () => {
 
 	// --- task card ---
 	const taskCards = ref<TaskCardEntry[]>([]);
+	const taskPanelVisible = ref(true);
 	const taskCenterId = ref<number | null>(null);
 	const taskWindowStart = ref(0);
 	const taskCenter = computed(() => taskCenterId.value !== null);
@@ -580,6 +581,7 @@ export const useHudStore = defineStore("hud", () => {
 			id: ++_taskId,
 		};
 		taskCards.value.unshift(entry);
+		taskPanelVisible.value = true;
 		taskWindowStart.value = 0;
 		gameState.state.taskOpen = true;
 		if (shouldCenter) {
@@ -608,11 +610,20 @@ export const useHudStore = defineStore("hud", () => {
 			Math.max(0, taskCards.value.length - 3),
 		);
 		gameState.state.taskOpen = taskCards.value.length > 0;
+		if (!taskCards.value.length) taskPanelVisible.value = false;
+	}
+
+	function toggleTaskPanel(): boolean {
+		// 居中任务仍是必须按 E 确认的剧情门槛，Q 只折叠已确认的待办卡片。
+		if (!taskCards.value.length || taskCenterId.value !== null) return false;
+		taskPanelVisible.value = !taskPanelVisible.value;
+		return true;
 	}
 
 	function hideTask() {
 		gameState.state.taskOpen = false;
 		taskCards.value = [];
+		taskPanelVisible.value = false;
 		taskCenterId.value = null;
 		taskWindowStart.value = 0;
 	}
@@ -771,6 +782,7 @@ export const useHudStore = defineStore("hud", () => {
 		overlay,
 		title,
 		taskCards,
+		taskPanelVisible,
 		devPlayerTuning,
 		taskCenter,
 		taskCenterId,
@@ -817,6 +829,7 @@ export const useHudStore = defineStore("hud", () => {
 		advanceResult,
 		showTask,
 		closeTask,
+		toggleTaskPanel,
 		hideTask,
 		taskNeedsConfirmation,
 		showNewerTasks,

@@ -72,7 +72,11 @@ onUnmounted(() => window.removeEventListener("keydown", onKeyDown, true));
 				<div class="eyebrow">HONGHU · FINAL RECORD</div>
 				<h1>历史现场画像</h1>
 				<div class="poster-frame">
-					<img :src="hud.portraitPanel.posterSrc" :alt="`结尾画像：${hud.portraitPanel.portrait.name}`" />
+					<img
+						:src="hud.portraitPanel.posterSrc"
+						:alt="`结尾画像：${hud.portraitPanel.portrait.name}`"
+						decoding="async"
+					/>
 				</div>
 			</section>
 
