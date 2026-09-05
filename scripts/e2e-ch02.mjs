@@ -71,6 +71,21 @@ async function choose(index) {
 	await page.locator(".choice-panel .choice").nth(index).click();
 	await sleep(250);
 }
+async function assertChoicePoster(expectedPath, expectedWidth, expectedHeight) {
+	await page.waitForSelector(".result-panel img");
+	await waitFor(() => document.querySelector(".result-panel img")?.naturalWidth > 0);
+	const poster = await page.evaluate(() => {
+		const image = document.querySelector(".result-panel img");
+		return image
+			? { src: image.getAttribute("src"), width: image.naturalWidth, height: image.naturalHeight }
+			: null;
+	});
+	if (!poster?.src?.includes(expectedPath))
+		throw new Error(`Chapter 2 poster mismatch: ${JSON.stringify({ expectedPath, poster })}`);
+	if (poster.width !== expectedWidth || poster.height !== expectedHeight)
+		throw new Error(`Chapter 2 poster dimensions mismatch: ${JSON.stringify({ expectedWidth, expectedHeight, poster })}`);
+	await page.screenshot({ path: `${output}choice-${expectedPath.split("/").pop()}` });
+}
 
 await page.goto(`${base}/?chapter=2`);
 await waitFor(() => !!window.gameDirector && !!window.ch02TransitionGame);
@@ -99,6 +114,9 @@ await continueInfo();
 await waitFor(() => document.querySelector('.dialogue-avatar-wrap img[src*="ch02-chen"]')?.naturalWidth > 0);
 await advanceNarrative();
 await choose(3);
+await assertChoicePoster("/assets/ch02/choices/flashback/flashback-D.png", 1280, 720);
+await page.keyboard.press("E");
+await sleep(180);
 await advanceNarrative();
 await page.keyboard.press("E");
 await sleep(180);
@@ -115,6 +133,9 @@ await advanceNarrative();
 await page.waitForSelector(".info-screen");
 await continueInfo();
 await choose(1);
+await assertChoicePoster("/assets/ch02/choices/group/group-B.png", 1536, 864);
+await page.keyboard.press("E");
+await sleep(180);
 await advanceNarrative();
 await page.keyboard.press("E");
 await sleep(180);
@@ -135,6 +156,9 @@ await advanceNarrative();
 await page.waitForSelector(".info-screen");
 await continueInfo();
 await choose(1);
+await assertChoicePoster("/assets/ch02/choices/materials/materials-B.png", 1672, 941);
+await page.keyboard.press("E");
+await sleep(180);
 await advanceNarrative();
 await page.screenshot({ path: `${output}ch02-materials-complete.png` });
 await page.keyboard.press("E");

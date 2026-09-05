@@ -22,6 +22,7 @@ import type { ChenWalkDirection } from "@/common/chenWalk";
 import {
 	clearFade,
 	closeTask,
+	advanceResult,
 	hideChoices,
 	hideDialogue,
 	hideInfoPanel,
@@ -40,6 +41,7 @@ import {
 	applyDevPlayerMotionFromJson,
 	showChoices,
 	showInfoPanel,
+	showResult,
 } from "@/common/ui";
 import {
 	mountLayeredMap,
@@ -77,6 +79,7 @@ import {
 import { applyFormalChoice } from "@/common/actionProfileSystem";
 import { useGameSaveStore } from "@/stores/modules/gameSave";
 import { addManagedBgm } from "@/common/audioBus";
+import { chapter2ChoicePosterPath } from "./ch02ChoicePosters";
 
 const WORLD_W = 1664;
 const WORLD_H = 936;
@@ -358,8 +361,12 @@ export class Ch02AncestralHallScene extends Phaser.Scene {
 			.centerOn(WORLD_W / 2, WORLD_H / 2);
 		this.setupZoneEditor();
 		this.keyMap = createKeyMap(this);
-		onAction(this, "INTERACT", () => this.handleConfirm());
+		onAction(this, "INTERACT", () => {
+			if (this.state.mode === "result") return advanceResult();
+			this.handleConfirm();
+		});
 		onAction(this, "ADVANCE", () => {
+			if (this.state.mode === "result") return advanceResult();
 			if (this.state.inNarrative) advanceNarrative();
 		});
 		onAction(this, "PAUSE", () => togglePause());
@@ -460,9 +467,21 @@ export class Ch02AncestralHallScene extends Phaser.Scene {
 		if (!choice) return;
 		this.applyGroupChoice(choice);
 		hideChoices();
-		this.state.mode = "narrative";
+		this.state.mode = "result";
 		this.state.playerLocked = true;
-		playNarrative(choice.feedback, () => this.completeGroupChoice());
+		showResult({
+			image: chapter2ChoicePosterPath("GROUP", choice.id),
+			result: [
+				`你选择了“${choice.label}”。`,
+				"当前选择已记录。按空格退出图片，进入剧情反馈。",
+			],
+			hint: "空格 退出",
+			onComplete: () => {
+				this.state.mode = "narrative";
+				this.state.playerLocked = true;
+				playNarrative(choice.feedback, () => this.completeGroupChoice());
+			},
+		});
 	}
 
 	applyGroupChoice(choice: Ch02GroupChoice) {
@@ -539,9 +558,21 @@ export class Ch02AncestralHallScene extends Phaser.Scene {
 		if (!choice) return;
 		this.applyMaterialsChoice(choice);
 		hideChoices();
-		this.state.mode = "narrative";
+		this.state.mode = "result";
 		this.state.playerLocked = true;
-		playNarrative(choice.feedback, () => this.completeMaterialsChoice());
+		showResult({
+			image: chapter2ChoicePosterPath("MATERIALS", choice.id),
+			result: [
+				`你选择了“${choice.label}”。`,
+				"当前选择已记录。按空格退出图片，进入剧情反馈。",
+			],
+			hint: "空格 退出",
+			onComplete: () => {
+				this.state.mode = "narrative";
+				this.state.playerLocked = true;
+				playNarrative(choice.feedback, () => this.completeMaterialsChoice());
+			},
+		});
 	}
 
 	applyMaterialsChoice(choice: Ch02MaterialsChoice) {

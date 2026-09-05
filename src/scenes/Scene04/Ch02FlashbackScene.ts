@@ -10,9 +10,11 @@ import {
 	hidePrompt,
 	hideResult,
 	hideTask,
+	advanceResult,
 	playNarrative,
 	showChoices,
 	showInfoPanel,
+	showResult,
 	showTask,
 	taskNeedsConfirmation,
 	togglePause,
@@ -27,6 +29,7 @@ import {
 	CH02_FLASHBACK_INTRO_THOUGHTS,
 	CH02_FLASHBACK_KNOWN_INFO,
 } from "./ch02Flashback.content";
+import { chapter2ChoicePosterPath } from "./ch02ChoicePosters";
 
 const VIEW_W = 1280;
 const VIEW_H = 720;
@@ -37,6 +40,7 @@ type FlashbackPhase =
 	| "known-info"
 	| "intro-thoughts"
 	| "choice"
+	| "choice-result"
 	| "choice-thoughts"
 	| "complete";
 
@@ -101,6 +105,7 @@ export class Ch02FlashbackScene extends Phaser.Scene {
 	}
 
 	handleAdvance() {
+		if (this.state.mode === "result") return advanceResult();
 		if (this.phase === "video") return this.completeVideo();
 		if (this.phase === "known-info") return this.continueFromKnownInfo();
 		if (this.phase === "intro-thoughts" || this.phase === "choice-thoughts")
@@ -165,10 +170,23 @@ export class Ch02FlashbackScene extends Phaser.Scene {
 		});
 		useGameSaveStore().autosave("CH02_FLASHBACK");
 		hideChoices();
-		this.phase = "choice-thoughts";
-		this.state.mode = "narrative";
+		this.phase = "choice-result";
+		this.state.mode = "result";
 		this.state.playerLocked = true;
-		playNarrative(choice.thoughts, () => this.completeSelection());
+		showResult({
+			image: chapter2ChoicePosterPath("FLASHBACK", choice.id),
+			result: [
+				`你选择了“${choice.label}”。`,
+				"当前选择已记录。按空格退出图片，进入心理描写。",
+			],
+			hint: "空格 退出",
+			onComplete: () => {
+				this.phase = "choice-thoughts";
+				this.state.mode = "narrative";
+				this.state.playerLocked = true;
+				playNarrative(choice.thoughts, () => this.completeSelection());
+			},
+		});
 	}
 
 	completeSelection() {
