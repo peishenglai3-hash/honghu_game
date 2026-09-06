@@ -1,0 +1,19 @@
+{
+	"name": "红色源代码·洪湖篇",
+	"short_name": "洪湖篇",
+	"description": "红色源代码·洪湖篇叙事探索游戏",
+	"start_url": "./",
+	"scope": "./",
+	"display": "standalone",
+	"orientation": "landscape",
+	"background_color": "#161612",
+	"theme_color": "#161612",
+	"icons": [
+		{
+			"src": "./assets/ui/honghu-desktop-icon-placeholder.png",
+			"sizes": "1254x1254",
+			"type": "image/png",
+			"purpose": "any maskable"
+		}
+	]
+}

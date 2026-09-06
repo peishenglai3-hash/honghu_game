@@ -12,6 +12,7 @@ import App from "./App.vue";
 import "@/css/base.css";
 
 import { validateNarrative } from "@/scenes/Scene01/content";
+import { registerPwaServiceWorker } from "@/common/pwa";
 
 const setup = () => {
 	validateNarrative();
@@ -20,6 +21,7 @@ const setup = () => {
 	const app = createApp(App);
 	app.use(createPinia());
 	app.mount("#app");
+	registerPwaServiceWorker();
 };
 
 setup();
