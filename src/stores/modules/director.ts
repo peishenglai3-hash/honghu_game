@@ -7,27 +7,6 @@ import { CHOICES, SCENE_EXIT } from "@/scenes/Scene01/content";
 import { TitleScene } from "@/scenes/Title/TitleScene";
 import { Scene01 } from "@/scenes/Scene01/Scene01";
 import { PrologueScene02 } from "@/scenes/Scene02/PrologueScene02";
-import { Ch01Sc01Scene } from "@/scenes/Scene03/Ch01Sc01Scene";
-import { Ch01Sc02Scene } from "@/scenes/Scene03/Ch01Sc02Scene";
-import { Ch01Sc03Scene } from "@/scenes/Scene03/Ch01Sc03Scene";
-import { Ch02TransitionScene } from "@/scenes/Scene04/Ch02TransitionScene";
-import { Ch02AncestralHallScene } from "@/scenes/Scene04/Ch02AncestralHallScene";
-import { Ch02FlashbackScene } from "@/scenes/Scene04/Ch02FlashbackScene";
-import { Ch02DepartureScene } from "@/scenes/Scene04/Ch02DepartureScene";
-import { Ch03OpeningScene } from "@/scenes/Scene05/Ch03OpeningScene";
-import { Ch03Flashback3Scene } from "@/scenes/Scene05/Ch03Flashback3Scene";
-import { Ch03TuCompoundScene } from "@/scenes/Scene05/Ch03TuCompoundScene";
-import { Ch03GateBreachCombatScene } from "@/scenes/Scene05/Ch03GateBreachCombatScene";
-import { Ch03HistoricalNodeScene } from "@/scenes/Scene05/Ch03HistoricalNodeScene";
-import { Ch03ChapterEndScene } from "@/scenes/Scene05/Ch03ChapterEndScene";
-import { Ch04OpeningScene } from "@/scenes/Scene06/Ch04OpeningScene";
-import { Ch04WangyeTempleScene } from "@/scenes/Scene06/Ch04WangyeTempleScene";
-import { Ch04ConsciousnessScene } from "@/scenes/Scene06/Ch04ConsciousnessScene";
-import { Ch04ModernReturnScene } from "@/scenes/Scene06/Ch04ModernReturnScene";
-import { Ch04FinalChoiceScene } from "@/scenes/Scene06/Ch04FinalChoiceScene";
-import { Ch04AnswerWrittenScene } from "@/scenes/Scene06/Ch04AnswerWrittenScene";
-import { Ch04Scene5VideoScene } from "@/scenes/Scene06/Ch04Scene5VideoScene";
-import { Ch04PortraitScene } from "@/scenes/Scene06/Ch04PortraitScene";
 import {
 	isCh04TempleShot,
 	type Ch04TempleShot,
@@ -66,6 +45,7 @@ import {
 import { useGameSaveStore, SCENE_KEY } from "@/stores";
 import { ambience } from "@/common/ambience";
 import { applyManagedBgmVolume } from "@/common/audioBus";
+import { ensureSceneRegistered } from "@/common/sceneRegistry";
 
 const CHAPTER3_FAILURE_FLAGS = new Set([
 	"CH03_RISK_PRECHECK_FAILURE",
@@ -104,27 +84,6 @@ function createGame(parent: HTMLElement): Phaser.Game {
 			TitleScene,
 			Scene01,
 			PrologueScene02,
-			Ch01Sc01Scene,
-			Ch01Sc02Scene,
-			Ch01Sc03Scene,
-			Ch02TransitionScene,
-			Ch02AncestralHallScene,
-			Ch02FlashbackScene,
-			Ch02DepartureScene,
-			Ch03OpeningScene,
-			Ch03Flashback3Scene,
-			Ch03TuCompoundScene,
-			Ch03GateBreachCombatScene,
-			Ch03HistoricalNodeScene,
-			Ch03ChapterEndScene,
-			Ch04OpeningScene,
-			Ch04WangyeTempleScene,
-			Ch04ConsciousnessScene,
-			Ch04ModernReturnScene,
-			Ch04FinalChoiceScene,
-			Ch04AnswerWrittenScene,
-			Ch04Scene5VideoScene,
-			Ch04PortraitScene,
 		],
 	});
 }
@@ -158,6 +117,24 @@ const MANAGED_SCENE_KEYS = [
 
 function stopManagedScenes(game: Phaser.Game): void {
 	for (const sceneKey of MANAGED_SCENE_KEYS) game.scene.stop(sceneKey);
+}
+
+let sceneStartRequest = 0;
+
+function startSceneWhenReady(
+	game: Phaser.Game,
+	key: string,
+	data?: object,
+	): void {
+	const request = ++sceneStartRequest;
+	void ensureSceneRegistered(game, key)
+		.then(() => {
+			if (request !== sceneStartRequest) return;
+			game.scene.start(key, data);
+		})
+		.catch((error: unknown) => {
+			console.error(`Failed to load scene ${key}`, error);
+		});
 }
 
 export const useDirectorStore = defineStore("director", () => {
@@ -218,7 +195,9 @@ export const useDirectorStore = defineStore("director", () => {
 			if (query.get("scene") === "fb") {
 				// 旧版回归脚本使用的独立闪回验收入口，仅限 DEV；正式包不接受该参数。
 				(window as any).gameDirector.standaloneFb = true;
-				window.setTimeout(() => game.value?.scene.start("Ch01Sc02Scene"), 0);
+				window.setTimeout(() => {
+					if (game.value) startSceneWhenReady(game.value, "Ch01Sc02Scene");
+				}, 0);
 			} else if (isAncestralHallVariant(requestedMap)) {
 				window.setTimeout(() => openChapter2Map(requestedMap), 0);
 			} else if (isTuCompoundState(requestedChapter3State)) {
@@ -280,7 +259,7 @@ export const useDirectorStore = defineStore("director", () => {
 		g.events.on("ch02:chapter3-transition", () => {
 			g.scene.stop("Ch02AncestralHallScene");
 			clearStoryUi();
-			g.scene.start("Ch02DepartureScene");
+			startSceneWhenReady(g, "Ch02DepartureScene");
 		});
 		g.events.on("ch02:departure-complete", () => {
 			g.scene.stop("Ch02DepartureScene");
@@ -488,7 +467,7 @@ export const useDirectorStore = defineStore("director", () => {
 		]) {
 			if (sceneKey !== "Ch02AncestralHallScene") g.scene.stop(sceneKey);
 		}
-		g.scene.start("Ch02AncestralHallScene", { variant: selectedVariant, entry });
+		startSceneWhenReady(g, "Ch02AncestralHallScene", { variant: selectedVariant, entry });
 	}
 
 	function startChapter2Opening(captureEntry = true): void {
@@ -511,7 +490,7 @@ export const useDirectorStore = defineStore("director", () => {
 			"Ch02DepartureScene",
 		]) g.scene.stop(sceneKey);
 		transitionAudio.prime();
-		g.scene.start("Ch02TransitionScene");
+		startSceneWhenReady(g, "Ch02TransitionScene");
 	}
 
 	function startChapter2Flashback(): void {
@@ -531,7 +510,7 @@ export const useDirectorStore = defineStore("director", () => {
 			"Ch02AncestralHallScene",
 			"Ch02DepartureScene",
 		]) g.scene.stop(sceneKey);
-		g.scene.start("Ch02FlashbackScene");
+		startSceneWhenReady(g, "Ch02FlashbackScene");
 	}
 
 	function startChapter2ToChapter3Transition(): void {
@@ -541,7 +520,7 @@ export const useDirectorStore = defineStore("director", () => {
 		clearStoryUi();
 		stopManagedAudio();
 		g.scene.stop("Ch02AncestralHallScene");
-		g.scene.start("Ch02DepartureScene");
+		startSceneWhenReady(g, "Ch02DepartureScene");
 	}
 
 	function startChapter3Opening(captureEntry = true): void {
@@ -571,7 +550,7 @@ export const useDirectorStore = defineStore("director", () => {
 			"Ch03ChapterEndScene",
 		]) g.scene.stop(sceneKey);
 		transitionAudio.prime();
-		g.scene.start("Ch03OpeningScene");
+		startSceneWhenReady(g, "Ch03OpeningScene");
 	}
 
 	function startChapter3Flashback3(): void {
@@ -598,7 +577,7 @@ export const useDirectorStore = defineStore("director", () => {
 			"Ch03HistoricalNodeScene",
 			"Ch03ChapterEndScene",
 		]) g.scene.stop(sceneKey);
-		g.scene.start("Ch03Flashback3Scene");
+		startSceneWhenReady(g, "Ch03Flashback3Scene");
 	}
 
 	function openChapter3Map(state: TuCompoundState = "STATE_WAITING"): void {
@@ -625,7 +604,7 @@ export const useDirectorStore = defineStore("director", () => {
 			"Ch03HistoricalNodeScene",
 			"Ch03ChapterEndScene",
 		]) g.scene.stop(sceneKey);
-		g.scene.start("Ch03TuCompoundScene", { state });
+		startSceneWhenReady(g, "Ch03TuCompoundScene", { state });
 	}
 
 	function startChapter3Combat(): void {
@@ -652,7 +631,7 @@ export const useDirectorStore = defineStore("director", () => {
 			"Ch03HistoricalNodeScene",
 			"Ch03ChapterEndScene",
 		]) g.scene.stop(sceneKey);
-		g.scene.start("Ch03GateBreachCombatScene");
+		startSceneWhenReady(g, "Ch03GateBreachCombatScene");
 	}
 
 	function startChapter3HistoricalNode(): void {
@@ -679,7 +658,7 @@ export const useDirectorStore = defineStore("director", () => {
 			"Ch03HistoricalNodeScene",
 			"Ch03ChapterEndScene",
 		]) g.scene.stop(sceneKey);
-		g.scene.start("Ch03HistoricalNodeScene");
+		startSceneWhenReady(g, "Ch03HistoricalNodeScene");
 	}
 
 	function startChapter3End(): void {
@@ -706,7 +685,7 @@ export const useDirectorStore = defineStore("director", () => {
 			"Ch03HistoricalNodeScene",
 			"Ch03ChapterEndScene",
 		]) g.scene.stop(sceneKey);
-		g.scene.start("Ch03ChapterEndScene");
+		startSceneWhenReady(g, "Ch03ChapterEndScene");
 	}
 
 	function startChapter4Opening(captureEntry = true): void {
@@ -719,7 +698,7 @@ export const useDirectorStore = defineStore("director", () => {
 		(window as any).hideTitleCard?.();
 		stopManagedScenes(g);
 		// 视频自身带声音；不启动章节 BGM，避免与视频音轨混音。
-		g.scene.start("Ch04OpeningScene");
+		startSceneWhenReady(g, "Ch04OpeningScene");
 	}
 
 	function openChapter4Temple(shot: Ch04TempleShot = "SHOT_WIDE"): void {
@@ -729,7 +708,7 @@ export const useDirectorStore = defineStore("director", () => {
 		clearStoryUi();
 		stopManagedAudio();
 		stopManagedScenes(g);
-		g.scene.start("Ch04WangyeTempleScene", { shot });
+		startSceneWhenReady(g, "Ch04WangyeTempleScene", { shot });
 	}
 
 	function startChapter4Consciousness(shot: Ch04TempleShot = "SHOT_WIDE"): void {
@@ -739,7 +718,7 @@ export const useDirectorStore = defineStore("director", () => {
 		clearStoryUi();
 		stopManagedAudio();
 		stopManagedScenes(g);
-		g.scene.start("Ch04ConsciousnessScene", { shot });
+		startSceneWhenReady(g, "Ch04ConsciousnessScene", { shot });
 	}
 
 	function startChapter4ModernReturn(): void {
@@ -749,7 +728,7 @@ export const useDirectorStore = defineStore("director", () => {
 		clearStoryUi();
 		stopManagedAudio();
 		stopManagedScenes(g);
-		g.scene.start("Ch04ModernReturnScene");
+		startSceneWhenReady(g, "Ch04ModernReturnScene");
 	}
 
 	function startChapter4FinalChoice(): void {
@@ -759,7 +738,7 @@ export const useDirectorStore = defineStore("director", () => {
 		clearStoryUi();
 		stopManagedAudio();
 		stopManagedScenes(g);
-		g.scene.start("Ch04FinalChoiceScene");
+		startSceneWhenReady(g, "Ch04FinalChoiceScene");
 	}
 
 	function startChapter4AnswerWritten(): void {
@@ -769,7 +748,7 @@ export const useDirectorStore = defineStore("director", () => {
 		clearStoryUi();
 		stopManagedAudio();
 		stopManagedScenes(g);
-		g.scene.start("Ch04AnswerWrittenScene");
+		startSceneWhenReady(g, "Ch04AnswerWrittenScene");
 	}
 
 	function startChapter4Scene5Video(): void {
@@ -779,7 +758,7 @@ export const useDirectorStore = defineStore("director", () => {
 		clearStoryUi();
 		stopManagedAudio();
 		stopManagedScenes(g);
-		g.scene.start("Ch04Scene5VideoScene");
+		startSceneWhenReady(g, "Ch04Scene5VideoScene");
 	}
 
 	function startChapter4Portrait(): void {
@@ -789,7 +768,7 @@ export const useDirectorStore = defineStore("director", () => {
 		clearStoryUi();
 		stopManagedAudio();
 		stopManagedScenes(g);
-		g.scene.start("Ch04PortraitScene");
+		startSceneWhenReady(g, "Ch04PortraitScene");
 	}
 
 	function finishChapter2(): void {
@@ -929,7 +908,7 @@ export const useDirectorStore = defineStore("director", () => {
 			"Ch03ChapterEndScene",
 		]) g.scene.stop(sceneKey);
 		gameSave.autosave("CH01_SC01");
-		g.scene.start("Ch01Sc01Scene");
+		startSceneWhenReady(g, "Ch01Sc01Scene");
 	}
 
 	function startFromSave(save: RunSave): void {
@@ -993,7 +972,7 @@ export const useDirectorStore = defineStore("director", () => {
 			save.sceneId === "PROLOGUE_SC02"
 		)
 			bgm.play().catch(() => {});
-		game.value!.scene.start(SCENE_KEY[save.sceneId]);
+		startSceneWhenReady(game.value!, SCENE_KEY[save.sceneId]);
 	}
 
 	function readChapter3Access() {
@@ -1007,7 +986,7 @@ export const useDirectorStore = defineStore("director", () => {
 		gameSave.autosave(sceneId);
 		if (typeof window !== "undefined")
 			window.dispatchEvent(new CustomEvent("honghu:scene-enter", { detail: { sceneId } }));
-		game.value!.scene.start(key);
+		startSceneWhenReady(game.value!, key);
 	}
 
 	function beginPrologueExplore(): void {
@@ -1067,7 +1046,7 @@ export const useDirectorStore = defineStore("director", () => {
 		game.value!.scene.stop("Ch03HistoricalNodeScene");
 		game.value!.scene.stop("Ch03ChapterEndScene");
 		gameSave.autosave("CH01_SC01");
-		game.value!.scene.start("Ch01Sc01Scene");
+		startSceneWhenReady(game.value!, "Ch01Sc01Scene");
 		return true;
 	}
 
