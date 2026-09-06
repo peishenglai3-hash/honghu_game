@@ -1,4 +1,5 @@
 import { assetPath } from "@/common/paths";
+import { cachePwaUrls } from "@/common/pwa";
 
 export type AssetBundle =
 	| "prologue"
@@ -48,4 +49,13 @@ export function assetUrlsForBundle(
 	return manifest.assets
 		.filter((asset) => asset.bundle === bundle)
 		.map((asset) => assetPath(asset.path));
+}
+
+/** 请求服务工作线程缓存一个章节；下载由用户或章节入口显式触发。 */
+export async function requestAssetBundleCache(bundle: AssetBundle): Promise<number> {
+	const manifest = await loadAssetManifest();
+	if (!manifest) return 0;
+	const urls = assetUrlsForBundle(manifest, bundle);
+	cachePwaUrls(urls);
+	return urls.length;
 }

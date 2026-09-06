@@ -1,6 +1,9 @@
 node_modules/
 .vite-cache/
 dist/
+release-desktop/
+*.pem
+.tmp-*/
 .tmp_e2e/
 *.log
 .DS_Store

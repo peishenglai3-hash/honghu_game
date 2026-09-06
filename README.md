@@ -37,6 +37,14 @@ npm run build
 
 操作：WASD/方向键移动，E 交互/关闭任务，Space 推进，ESC 暂停。
 
+## 多端第一阶段基座
+
+- 生产构建会生成 `dist/data/asset-manifest.json`：记录 703 项资源的章节归属、字节数和 SHA-256；章节场景代码按进入时动态加载。
+- `public/manifest.webmanifest` 与 `public/sw.js` 提供 PWA 启动壳、运行时资源缓存、缓存清理和版本切换基础。正式安装必须使用 HTTPS；当前公网 IP/HTTP 不作为正式 PWA 发布地址。
+- 本地验证：先运行 `npm run build`，再启动 `npm run preview`，最后运行 `npm run e2e:pwa`。该验证覆盖安装控制权、Manifest、缓存和离线首屏。
+- 桌面基座：`npm run desktop:dev` 启动 Electron 本地壳，`npm run e2e:electron` 做无交互启动烟测；`npm run desktop:package` 仅在确认磁盘空间、签名和发布物料后执行。
+- Cocos Creator、正式商店提交、域名/备案/HTTPS、服务器切换和商业化能力均保持在后续闸门内，不与当前 Phaser 正式版混用。
+
 ## 隐藏开发工具
 
 按 `P` 打开可拖动的 `ZONE FORGE` 面板。碰撞箱为粉色、交互区为黄色，支持新增、重命名、复制、按地图中轴水平镜像、精确输入、拖动及从四边/四角缩放，面板打开时角色仍可移动。碰撞箱还支持角度输入和顶部旋转手柄；主角及 NPC 的脚底碰撞箱也可直接点选修改，运行时使用旋转矩形参与真实碰撞判定。

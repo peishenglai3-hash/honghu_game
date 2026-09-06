@@ -1,6 +1,9 @@
 const CACHE_VERSION = "honghu-pwa-v1-20260906";
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
+const CACHE_BATCH_SIZE = 8;
+const CACHE_ATTEMPTS = 3;
+const CACHE_RETRY_DELAY_MS = 200;
 
 function isSameOrigin(url) {
 	return url.origin === self.location.origin;
@@ -25,6 +28,36 @@ async function cacheResponse(cacheName, request, response) {
 		await cache.put(request, response.clone());
 	}
 	return response;
+}
+
+function wait(ms) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function cacheOne(cache, url) {
+	if (await cache.match(url)) return true;
+	for (let attempt = 0; attempt < CACHE_ATTEMPTS; attempt += 1) {
+		try {
+			const response = await fetch(url, { cache: "reload" });
+			if (!response.ok) throw new Error(`HTTP ${response.status}`);
+			await cache.put(url, response.clone());
+			return true;
+		} catch {
+			if (attempt + 1 < CACHE_ATTEMPTS) await wait(CACHE_RETRY_DELAY_MS * (attempt + 1));
+		}
+	}
+	return false;
+}
+
+async function cacheUrls(urls) {
+	const cache = await caches.open(RUNTIME_CACHE);
+	let cached = 0;
+	for (let index = 0; index < urls.length; index += CACHE_BATCH_SIZE) {
+		const batch = urls.slice(index, index + CACHE_BATCH_SIZE);
+		const results = await Promise.all(batch.map((url) => cacheOne(cache, url)));
+		cached += results.filter(Boolean).length;
+	}
+	return { requested: urls.length, cached, failed: urls.length - cached };
 }
 
 self.addEventListener("install", (event) => {
@@ -104,7 +137,6 @@ self.addEventListener("message", (event) => {
 	if (data.type === "CACHE_URLS" && Array.isArray(data.urls)) {
 		event.waitUntil(
 			(async () => {
-				const cache = await caches.open(RUNTIME_CACHE);
 				const scope = new URL("./", self.registration.scope);
 				const urls = data.urls
 					.filter((url) => typeof url === "string")
@@ -119,8 +151,9 @@ self.addEventListener("message", (event) => {
 						}
 					})
 					.filter((url) => url !== null);
-				await cache.addAll(urls);
+				const result = await cacheUrls(urls);
+				event.source?.postMessage({ type: "CACHE_URLS_RESULT", ...result });
 			})(),
-	);
+		);
 	}
 });

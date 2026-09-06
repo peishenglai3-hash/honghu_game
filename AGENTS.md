@@ -13,7 +13,7 @@
 | 游戏引擎 | Phaser 3.90.0 (ES Module 引入) |
 | 构建工具 | Vite 5.4.14 |
 | 语言 | TypeScript (strict mode) |
-| 运行时 | 纯浏览器端 |
+| 运行时 | 浏览器/PWA；Electron 桌面壳（阶段性） |
 | UI 框架 | Vue 3.5 (HUD 层) |
 | 状态管理 | Pinia (Setup Store 风格) |
 | 样式 | Vue scoped CSS + 全局 CSS (`src/css/base.css`) |
@@ -36,6 +36,8 @@ honghu_game/
 ├── .env.production                  # 生产环境变量（VITE_BASE=./）
 ├── CHANGELOG.md / PLAN_title_save_v1.0.md / README.md / LICENSE
 ├── .agents/skills/hg-project-tips/SKILL.md  # 项目编码规范 skill（Import 置顶 / Setup Store / 避免过度设计）
+├── electron/                         # 受限 Electron 桌面壳与 preload
+├── electron-builder.yml              # Windows 桌面打包配置
 ├── public/
 │   ├── assets/
 │   │   ├── audio/                   # BGM（prologue_bgm.wav / title_bgm.mp3）
@@ -99,6 +101,9 @@ honghu_game/
 │   │   ├── inkTransition.ts         # 程序化墨迹转场（屏幕空间墨团扩散，闪回跳变用）
 │   │   ├── modernPlayerWalk.ts      # 现代主角逐帧行走共享素材（序章用）
 │   │   ├── paths.ts                 # 资源路径工具（assetPath，自动拼接 BASE_URL）
+│   │   ├── pwa.ts                    # PWA 注册、缓存和更新消息
+│   │   ├── assetManifest.ts          # 章节资源清单读取与缓存请求
+│   │   ├── sceneRegistry.ts          # 非首屏章节场景动态注册
 │   │   ├── transitionAudio.ts       # 转场合成音效控制器（TransitionAudioController）
 │   │   └── ui.ts                    # HUD 控制转发层（Proxy 代理到 Pinia hud store）
 │   ├── constants/
@@ -153,7 +158,10 @@ honghu_game/
     ├── process-modern-player-assets.py # 现代主角逐帧素材处理
     ├── shot-scene02.mjs             # 场景2 验证截图
     ├── shot-npcs.mjs                # NPC 验证截图
-    └── verify-modern-player.mjs     # 现代主角素材校验
+    ├── verify-modern-player.mjs      # 现代主角素材校验
+    ├── validate-asset-manifest.mjs   # 资源清单完整性校验
+    ├── e2e-pwa.mjs                   # PWA 控制权与离线首屏
+    └── e2e-electron.mjs              # Electron 桌面壳启动烟测
 ```
 
 ## 路径别名
@@ -222,7 +230,7 @@ export function assetPath(path: string): string {
 
 **流程编排** — [src/stores/modules/director.ts](src/stores/modules/director.ts)，Pinia Setup Store：
 
-- `game` — `Phaser.Game` 单例（`createGame(parent)` 注册全部场景）
+- `game` — `Phaser.Game` 单例（首屏仅注册标题与序章；后续章节由 `sceneRegistry.ts` 按需注册）
 - `transitionAudio` — `TransitionAudioController`（转场合成音效）
 - `bgm` — 序章 BGM `HTMLAudioElement`
 - `init(parent)` / `startFromSave(save)` / `enterScene(key, sceneId)` / `finishPrologue()` / `rollbackToCheckpoint()`
@@ -253,7 +261,7 @@ Vue 通过 `v-if` 按可见性渲染面板。转场系统由 biz overlay 组件�
 
 ### 流程编排
 
-`src/main.ts` 初始化 Vue + Pinia；`src/App.vue` 的 `onMounted` 调用 `directorStore.init(gameEl)`（内部创建 `Phaser.Game` 并注册 `TitleScene`/`Scene01`/`PrologueScene02`/`Ch01Sc01Scene`/`Ch01Sc02Scene`/`Ch01Sc03Scene`）。流程由 Pinia director store + biz overlay 组件协同驱动：
+`src/main.ts` 初始化 Vue + Pinia；`src/App.vue` 的 `onMounted` 调用 `directorStore.init(gameEl)`（内部创建 `Phaser.Game`，首屏只注册 `TitleScene`/`Scene01`/`PrologueScene02`，第一章至第四章在进入前动态加载）。流程由 Pinia director store + biz overlay 组件协同驱动：
 
 ```
 TitleScene (标题四热区)
@@ -342,6 +350,10 @@ node scripts/e2e-walk-test.mjs           # 行走测试
 # 端口被占时可用 E2E_PORT 环境变量改端口（配合 vite --port <P>）
 npx tsc --noEmit      # TypeScript 类型检查（不生成文件）
 pnpm run build        # 生产构建
+pnpm run test:asset-manifest # 资源清单与哈希校验
+pnpm run e2e:pwa      # PWA 控制权与离线首屏
+pnpm run e2e:electron # Electron 桌面壳烟测
+pnpm run desktop:dev  # 本地 Electron 壳
 ```
 
 ### 添加新叙述条目

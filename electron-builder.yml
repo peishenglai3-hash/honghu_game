@@ -1,0 +1,22 @@
+appId: com.honghu.redcode
+productName: 红色源代码·洪湖篇
+directories:
+  output: release-desktop
+  buildResources: electron/resources
+files:
+  - dist/**
+  - electron/**
+  - package.json
+asar: true
+win:
+  icon: public/assets/ui/honghu-desktop-icon-placeholder.png
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: ${productName}-${version}-win-${arch}.${ext}
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+publish: null

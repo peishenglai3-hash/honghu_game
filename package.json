@@ -1,12 +1,16 @@
 {
 	"name": "honghu-prologue-playtest",
 	"private": true,
+	"main": "electron/main.cjs",
 	"version": "0.1.0",
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
 		"build": "vite build",
 		"preview": "vite preview",
+		"desktop:dev": "electron .",
+		"desktop:package": "electron-builder --config electron-builder.yml --win --publish never",
+		"e2e:electron": "node scripts/e2e-electron.mjs",
 		"test:asset-manifest": "node scripts/validate-asset-manifest.mjs",
 		"test:content": "tsx scripts/validate-content.mjs",
 		"test:ch01:posters": "tsx scripts/validate-ch01-choice-posters.mjs",
@@ -41,6 +45,8 @@
 	"devDependencies": {
 		"@types/node": "^26.2.0",
 		"@vitejs/plugin-vue": "^5.2.4",
+		"electron": "^44.2.0",
+		"electron-builder": "^26.15.3",
 		"playwright": "^1.62.1",
 		"prettier": "^3.9.6",
 		"tsx": "^4.23.12",
