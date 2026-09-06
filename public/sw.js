@@ -103,11 +103,24 @@ self.addEventListener("message", (event) => {
 	}
 	if (data.type === "CACHE_URLS" && Array.isArray(data.urls)) {
 		event.waitUntil(
-		(async () => {
-			const cache = await caches.open(RUNTIME_CACHE);
-			const urls = data.urls.filter((url) => typeof url === "string");
-			await cache.addAll(urls);
-		})(),
+			(async () => {
+				const cache = await caches.open(RUNTIME_CACHE);
+				const scope = new URL("./", self.registration.scope);
+				const urls = data.urls
+					.filter((url) => typeof url === "string")
+					.map((url) => {
+						try {
+							const parsed = new URL(url, scope);
+							return parsed.origin === self.location.origin && parsed.pathname.startsWith(scope.pathname)
+								? parsed.toString()
+								: null;
+						} catch {
+							return null;
+						}
+					})
+					.filter((url) => url !== null);
+				await cache.addAll(urls);
+			})(),
 	);
 	}
 });

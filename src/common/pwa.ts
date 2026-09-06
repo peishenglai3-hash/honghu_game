@@ -1,5 +1,16 @@
 const PWA_UPDATE_EVENT = "honghu:pwa-update";
 
+function postToServiceWorker(message: unknown): void {
+	const controller = navigator.serviceWorker?.controller;
+	if (controller) {
+		controller.postMessage(message);
+		return;
+	}
+	void navigator.serviceWorker?.ready.then((registration) => {
+		registration.active?.postMessage(message);
+	});
+}
+
 export function registerPwaServiceWorker(): void {
 	if (!import.meta.env.PROD || typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
 
@@ -22,13 +33,13 @@ export function registerPwaServiceWorker(): void {
 }
 
 export function requestPwaUpdate(): void {
-	navigator.serviceWorker?.controller?.postMessage({ type: "SKIP_WAITING" });
+	postToServiceWorker({ type: "SKIP_WAITING" });
 }
 
 export function clearPwaRuntimeCache(): void {
-	navigator.serviceWorker?.controller?.postMessage({ type: "CLEAR_RUNTIME_CACHE" });
+	postToServiceWorker({ type: "CLEAR_RUNTIME_CACHE" });
 }
 
 export function cachePwaUrls(urls: readonly string[]): void {
-	navigator.serviceWorker?.controller?.postMessage({ type: "CACHE_URLS", urls: [...urls] });
+	postToServiceWorker({ type: "CACHE_URLS", urls: [...urls] });
 }
