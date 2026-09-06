@@ -6,6 +6,7 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "vite build",
+		"preview": "vite preview",
 		"test:asset-manifest": "node scripts/validate-asset-manifest.mjs",
 		"test:content": "tsx scripts/validate-content.mjs",
 		"test:ch01:posters": "tsx scripts/validate-ch01-choice-posters.mjs",
@@ -23,6 +24,7 @@
 		"e2e:ch04": "node scripts/e2e-ch04-opening.mjs",
 		"e2e:ch04:final": "node scripts/e2e-ch04-modern-final.mjs",
 		"e2e:mobile": "node scripts/e2e-mobile.mjs",
+		"e2e:pwa": "node scripts/e2e-pwa.mjs",
 		"e2e:ch03:risk": "node scripts/e2e-ch03-risk-branches.mjs",
 		"e2e:ch03:observation": "node scripts/e2e-ch03-observation.mjs",
 		"e2e:ch03:flashback3": "node scripts/e2e-ch03-flashback3.mjs",
