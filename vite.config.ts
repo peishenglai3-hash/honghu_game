@@ -9,7 +9,10 @@
 import { defineConfig, loadEnv, type Plugin } from "vite";
 import vue from "@vitejs/plugin-vue";
 import { writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { readdir, stat } from "node:fs/promises";
+import { createReadStream } from "node:fs";
+import { createHash } from "node:crypto";
+import { dirname, relative, resolve } from "node:path";
 import type { IncomingMessage } from "node:http";
 import { fileURLToPath } from "node:url";
 
@@ -38,6 +41,69 @@ const writableFiles = new Set([
 ]);
 
 const MAX_ZONE_REQUEST_BYTES = 256 * 1024;
+
+type AssetManifestEntry = {
+	path: string;
+	bundle: string;
+	bytes: number;
+	sha256: string;
+};
+
+async function listPublicAssets(root: string, directory = root): Promise<string[]> {
+	const entries = await readdir(directory, { withFileTypes: true });
+	const files: string[] = [];
+	for (const entry of entries) {
+		const filePath = resolve(directory, entry.name);
+		if (entry.isDirectory()) files.push(...(await listPublicAssets(root, filePath)));
+		else if (entry.isFile() && relative(root, filePath).replaceAll("\\", "/").startsWith("assets/"))
+			files.push(filePath);
+	}
+	return files;
+}
+
+async function sha256File(filePath: string): Promise<string> {
+	const hash = createHash("sha256");
+	for await (const chunk of createReadStream(filePath)) hash.update(chunk);
+	return hash.digest("hex");
+}
+
+function assetBundle(assetPath: string): string {
+	if (assetPath.startsWith("assets/ch01/") || assetPath.startsWith("assets/audio/ch01/")) return "chapter-01";
+	if (assetPath.startsWith("assets/ch02/") || assetPath.startsWith("assets/audio/ch02/")) return "chapter-02";
+	if (assetPath.startsWith("assets/ch03/") || assetPath.startsWith("assets/audio/ch03/")) return "chapter-03";
+	if (assetPath.startsWith("assets/ch04/") || assetPath.startsWith("assets/audio/ch04/")) return "chapter-04";
+	if (assetPath.startsWith("assets/video/") || assetPath.startsWith("assets/map/")) return "prologue";
+	if (assetPath.startsWith("assets/audio/")) return "common-audio";
+	if (assetPath.startsWith("assets/characters/")) return "common-characters";
+	return "common-ui";
+}
+
+function assetManifestPlugin(): Plugin {
+	return {
+		name: "asset-manifest",
+		apply: "build",
+		async generateBundle() {
+			const publicRoot = resolve(projectRoot, "public");
+			const files = (await listPublicAssets(publicRoot)).sort();
+			const assets: AssetManifestEntry[] = [];
+			for (const filePath of files) {
+				const assetPath = relative(publicRoot, filePath).replaceAll("\\", "/");
+				const fileInfo = await stat(filePath);
+				assets.push({
+					path: `/${assetPath}`,
+					bundle: assetBundle(assetPath),
+					bytes: fileInfo.size,
+					sha256: await sha256File(filePath),
+				});
+			}
+			this.emitFile({
+				type: "asset",
+				fileName: "data/asset-manifest.json",
+				source: `${JSON.stringify({ schemaVersion: 1, assets }, null, 2)}\n`,
+			});
+		},
+	};
+}
 
 function isLoopbackAddress(address: string | undefined): boolean {
 	return address === "127.0.0.1" || address === "::1" || address === "::ffff:127.0.0.1";
@@ -120,7 +186,7 @@ function zoneEditorApi(): Plugin {
 export default defineConfig(({ command, mode }) => {
 	const env = loadEnv(mode, process.cwd(), "");
 	return {
-		plugins: [vue(), ...(command === "serve" ? [zoneEditorApi()] : [])],
+		plugins: [vue(), assetManifestPlugin(), ...(command === "serve" ? [zoneEditorApi()] : [])],
 		base: env.VITE_BASE || "/",
 		cacheDir: ".vite-cache",
 		resolve: {
