@@ -1,81 +1,94 @@
-# 序章·名字留在纸上｜可玩闭环
+# 《红色源代码：洪湖篇》
 
-本工程把此前两个孤立切片（Codex 的场景1 + OpenCode 的场景2）与 Codex 的黑幕转场系统整合为**单一可玩闭环**：
+> 以洪湖革命历史为叙事背景的像素风 2D 叙事探索 RPG。玩家通过场景探索、人物对话、物品调查与关键选择，走过从当代实践队到 1927 年洪湖的章节故事。
 
-```
-开场视频 → 场景1 纪念碑（探索/碑文序列/PRO-Q01 四选一/离场对话）
-→ 转场A（黑幕字幕：脚步·车辆·虫鸣远去·风扇出现 →「当晚｜暑期实践驻地」）
-→ 场景2 实践驻地（录音→笔记→入睡链，桌面状态随场景1选择变化）
-→ 转场B（黑幕声音替换：风扇→碗筷·木门·虫鸣·犬吠 →「1927年9月10日，中秋｜戴家场」→ 揭示图 陈继南家中）
-→ 序章结算（固定存档：画像累计 / 选择标签 / PROLOGUE_COMPLETED / TIME_TRAVEL_CHECKPOINT / 三风险=0）
-```
+## 项目现状
 
-## 当前版本（2026-08-13 18:06:07 更新）
+截至 2026-11-05，序章及第一至第四章已集成为连续可玩的游戏闭环，故事从序章进入历史场景，经过各章行动与回返，最终抵达第四章结算和人物画像。项目在浏览器游戏基础上，也集成了 PWA 离线入口与 Electron 桌面壳。
 
-第一章四项玩家反馈修复并上传：
+> **分支说明：** 当前包含完整章节、PWA 与 Electron 集成的代码基线位于 [feature/pwa-resource-loading](https://github.com/peishenglai3-hash/honghu_game/tree/feature/pwa-resource-loading)。GitHub 默认分支 [main](https://github.com/peishenglai3-hash/honghu_game/tree/main) 仍是较早的代码基线，尚未包含 PWA 与 Electron 集成。下方运行说明以集成分支为准。
 
-- 开场/章末视频完整 16:9 显示（`textureready` 时先 `setSizeToFrame` 再 `setDisplaySize`）
-- 章末面板数据驱动，第一章结束后返回标题画面（第二章接入时修改 endMeta 即可）
-- 道具图标短名→文件名映射，lamp / bowl 贴图正常显示
-- 碰撞箱像素级校准：桌子/母亲椅/父亲椅/书案/书案椅对位，补 4 件家具碰撞，删除误挡地板的 main_table
-- 附带：TRANSITION_A/B 收敛至 `src/scenes/transitionData.ts`，修复内容锁校验器
+| 篇章 | 主要内容 |
+| --- | --- |
+| 序章 | 当代实践队走访洪湖革命遗址，在纪念碑广场和实践驻地探索、整理材料并作出选择，随后进入历史叙事。 |
+| 第一章 | 玩家在陈继南家中醒来，经历状纸闪回、院墙接头与告别。 |
+| 第二章 | 在陈家祠堂及相关场景中经历抓壮丁闪回、部署、纪律与物资准备。 |
+| 第三章 | 围绕杜家大院展开观察、行动路线选择、战斗、历史节点与战后清点。 |
+| 第四章 | 从王爷庙戏台进入意识交错与现代回返，完成最终补写并进入人物画像结算。 |
 
-## 后续计划
+## 游戏与技术基础
 
-1. **UI/UX 界面优化**——标题界面、HUD、对话与结算面板的视觉与交互打磨。
-2. **冗杂功能优化和删减**——合并重复模块、清理旧版残留逻辑与无用资产。
-3. **人物建模修复、动作修复**——主角与 NPC 建模问题修复，行走/交互动画修复与统一。
+- **场景与剧情：** Phaser 负责地图、角色移动、碰撞、互动和场景流程；章节、对话、任务、物品、选择及状态配置由 TypeScript 与 JSON 数据共同驱动。
+- **界面：** Vue 3 和 Pinia 提供任务、对话、选择、物品、暂停、回顾、转场与结算等 HUD。
+- **选择与状态：** 剧情旗标在章节间传递；行动风险与人物画像分别记录和结算，玩家界面不展示内部数值和阈值。
+- **存档与重玩：** 包含自动存档、手动槽位、固定回退点、章节入口快照及章节重玩流程。
+- **表现与音频：** 包含逐帧角色动画、场景遮挡、章节视频、转场音效、背景音乐、战斗界面、结局画像与致谢字幕。
+- **移动端：** 提供触屏操作和横屏提示，可在支持的移动浏览器中体验。
+- **PWA：** 提供 Web App Manifest、Service Worker、离线入口和同源资源运行时缓存。离线可用内容取决于已经缓存的页面与资源；标准安装需通过 HTTPS 等安全上下文访问（本机 localhost 开发环境除外）。
+- **Electron：** 提供桌面应用基础壳与 Windows x64 安装包配置。Electron 使用隔离的 preload 桥接，不向游戏页面开放 Node.js 集成。
 
-## 运行
+## 技术栈
 
-```powershell
-npm run dev          # http://127.0.0.1:5175/
-npm run test:content # 内容锁校验
-npm run e2e          # Playwright 全流程（约2分钟）
-npm run build
-```
+Phaser 3.90 · Vite 6 · Vue 3 · Pinia · TypeScript · Electron
 
-操作：WASD/方向键移动，E 交互/关闭任务，Space 推进，ESC 暂停。
+## 获取代码与运行
 
-## 隐藏开发工具
+以下命令使用包含完整集成成果的 feature/pwa-resource-loading 分支：
 
-按 `P` 打开可拖动的 `ZONE FORGE` 面板。碰撞箱为粉色、交互区为黄色，支持新增、重命名、复制、按地图中轴水平镜像、精确输入、拖动及从四边/四角缩放，面板打开时角色仍可移动。碰撞箱还支持角度输入和顶部旋转手柄；主角及 NPC 的脚底碰撞箱也可直接点选修改，运行时使用旋转矩形参与真实碰撞判定。
+    git clone -b feature/pwa-resource-loading https://github.com/peishenglai3-hash/honghu_game.git
+    cd honghu_game
+    npm install
+    npm run dev
 
-“前景套索”使用磁性边缘路径：点击“开始套索”后用左键连续放置锚点，路径会自动吸附到底图边缘；右键撤销上一步，双击自动闭合完成，`Esc` 取消，松开鼠标不会中断绘制。选中套索后可整体拖动、复制、水平镜像；遮挡顺序自动比较套索最低点与人物脚底碰撞箱底边，最低点更靠下的一方显示在前。点击“保存 JSON”可写回场景数据。
+本地 Vite 开发服务器默认地址为 http://127.0.0.1:5175/。生产构建和预览：
 
-面板底部的剧情跳转按钮按当前背景前进：场景一进入现代驻地剧情，场景二进入陈继南家背景对应的穿越转场。
+    npm run build
+    npm run preview
 
-当前场景一“同学乙”的拍照动画仍是 DOM GIF，Canvas 前景蒙版无法覆盖该单个 NPC；玩家、同学甲及场景二角色均参与套索遮挡。后续将同学乙转换为 Phaser SpriteSheet 后即可统一遮挡。
+Windows 桌面壳：
 
-## 整合要点
+    npm run desktop:dev
+    npm run desktop:package
 
-- **单一状态总线** `src/state.js`：场景1的选择旗标（`FLAG_PRO_*`）直接写入 `state.flags`，场景2 的 `PRO02_logic.json story_state_bindings` 原样消费——A→笔记核对标记、B→手机纪念碑照片、C→录音停在涂老五文件、D→笔记翻到写名页（`PRO02_states.json` 文案变体）。
-- **画像累计**：`PROFILE_DELTAS` 按剧情表（A: C+2 I+1；B: C+1 A+2；C: I+1 G+2；D: D+1 I+2）写入 `state.profile`，结算面板与 localStorage `redcode.prologue.save` 一并落盘，供第一章读取。
-- **转场系统**：Codex 的 `SceneTransitionController` 参数化（entries/cues/revealEntryId/revealImageSrc 注入），同一控制器驱动转场A（新增数据，见 `transition-content.js`）与转场B（Codex 原 SC02_* 21 条 + 揭示图）；`TransitionAudioController` 为转场A 增加 footsteps_light / car_engine / insects_recede / fan_emerge 四个合成 cue。
-- **对话UI统一**为长期版式：左栏头像+竖排说话人，右栏两端对齐正文；黑旁白/绿心理/绛红对白三色契约贯穿两场景与转场字幕。
-- **事件接口**：`prologue:scene01-complete`（场景1→转场A→场景2）、`prologue:sleep-complete`（入睡→转场B）、`prologue:scene-exit`（结算，含 `SCENE_EXIT` 交接契约，目标 `CH01_SC01_CHEN_HOME_WAKE`）。
-- 修复：隐形物理代理体按 332×720 原始帧参与 `collideWorldBounds` 导致的位置钳制（场景1/场景2 均已 `setSize/setOffset` 为脚底小碰撞盒）。
+PWA 预览与对应的自动化检查入口：
 
-## NPC 与音频资产管线
+    npm run build
+    npm run preview
+    npm run e2e:pwa
 
-- **BGM**：`public/assets/audio/prologue_bgm.wav`，开场结束后循环播放（音量 0.35，句柄 `window.prologueBgm`）。
-- **NPC 尺寸**：场景1 两名 NPC 统一放大至约 1.25×（`NPC_DISPLAY` 77×160，DOM 动图遮罩 84×188），与主角体量匹配。
-- **场景2 开场侧身站姿**：主角起始于门旁 `DOOR_STAND`，显示 `player-side-right`（`主角 侧面试图.png` 白底抠图并镜像为面向右，`scripts/build-npc-assets.py` 的 `build_player_side()` 生成），显示高度 328 与行走精灵视高一致；首次移动后无缝切回行走图集。
-- **调试入口**：`/?scene=02` 直达场景2（跳过开场视频与场景1）；`scripts/shot-scene02.mjs` 截取开场站姿与移动切换两张验证图。
-- **同学甲·翻书动画**：`scripts/build-npc-assets.py` 从绿幕视频抽帧（fps=8）→ 色度抠图 → 对齐拼板 `student-a/actions/reading-sheet.png`（32 帧 8×4，8fps 循环），task1 与 task3 待机均播放。
-- **同学乙·拍照动画**：同脚本对 `NPC 乙 拍照 动图.gif` 做背景剔除（边框多种子洪泛 + 天空色清理 + 最大连通域）输出透明 `student-b/actions/camera-keyed.gif`（50 帧），配合 `style.css` 紧贴剪影的 clip-path（含腿间凹口）消除白边。
-- **同学乙·task3 站姿**：`student-b/front-task3.png`（绿幕抠图，显示宽度按源图纵横比自适应）。替换站姿源图后重跑：
-  `python scripts/build-npc-assets.py <绿幕站姿图路径>`（会同时重生成翻书拼板与拍照动图）。
+## 操作方式
 
-## 结构
+- **移动：** WASD 或方向键
+- **互动：** E
+- **推进对话或执行战斗动作：** Space
+- **任务面板 / 战斗换武器：** Q
+- **暂停：** Esc
+- **移动端：** 使用画面内触控操作
 
-- `src/Scene01.js` 场景1玩法（碑文序列、选择、离场）；`src/PrologueScene02.js` 场景2玩法（目标!标记、风味点、入睡链）。
-- `src/content01.js` / `content02.js` 双场景文本锁；`src/transition-content.js` 双转场数据。
-- `src/main.js` 流程编排与结算；`src/ui.js` 共享 HUD。
-- `public/data/` 场景1 manifest + PRO02 三件套；`public/assets/` 双场景地图/角色/物品/揭示图/开场视频。
+## 开发与验证入口
 
-## 验收
+仓库提供内容、系统、章节契约、资源清单、移动端、PWA 和 Electron 等检查脚本。需要时按本地改动选择运行：
 
-- `test:content`：场景1 24+1 条 / 4 选项、场景2 6+4+13+6 条 / 6 风味、转场 A5+B21，样式与说话人锁 PASS。
-- `e2e`：全流程 8 步 PASS（截图 pl_01…pl_08：场景1、选择、结果、转场A、场景2、转场B、揭示+结算）。
-- 生产构建通过。
+    npm run test:content
+    npm run test:systems
+    npm run test:asset-manifest
+    npm run test:ch03:contract
+    npm run test:ch04:contract
+    npm run e2e
+    npm run e2e:mobile
+    npm run e2e:pwa
+    npm run e2e:electron
+
+## 主要目录
+
+- src/scenes/：序章与各章节 Phaser 场景
+- src/components/：Vue HUD 与流程覆盖层
+- src/stores/：游戏状态、流程控制及存档
+- public/data/：章节场景与剧情数据
+- public/assets/：地图、人物、音频、视频、物品和界面素材
+- electron/：Electron 主进程与 preload
+- scripts/：内容、系统、资源与端到端检查脚本
+
+## 许可
+
+仓库顶层 LICENSE 采用 MIT 许可。该许可说明不自动覆盖所有图片、音频、视频、字体、商标或第三方素材；再利用具体资源前，请核对其来源和适用授权。
